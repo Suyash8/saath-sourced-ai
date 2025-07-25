@@ -1,6 +1,6 @@
 "use client";
 
-import { Header } from "@/components/layout/Header";
+import { Header, IconButton } from "@/components/layout/Header";
 import { Bell, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { vendorNavItems } from "@/config/nav";
@@ -17,16 +17,16 @@ export default function Home() {
         title={`Good morning, ${userName}!`}
         subtitle="Saathi has found 3 new high-value deals for you today."
       >
-        {/* Children are passed to the right side */}
-        <button
-          onClick={() => router.push("/notifications")}
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button onClick={() => router.push("/profile")} aria-label="Profile">
-          <User className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
+        <IconButton
+          href="/notifications"
+          icon={Bell}
+          className="!text-muted-foreground hover:!text-foreground"
+        />
+        <IconButton
+          href="/profile"
+          icon={User}
+          className="!text-muted-foreground hover:!text-foreground"
+        />
       </Header>
       <BottomNav navItems={vendorNavItems} />
     </div>

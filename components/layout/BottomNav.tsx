@@ -1,7 +1,8 @@
 "use client";
 
 import { ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 type BottomNavItemProps = {
@@ -12,29 +13,22 @@ type BottomNavItemProps = {
 };
 
 const BottomNavItem = ({ href, label, icon, isActive }: BottomNavItemProps) => {
-  const router = useRouter();
-
   return (
-    <button
-      onClick={() => router.push(href)}
+    <Link
+      href={href}
       className={cn(
-        "flex flex-col items-center gap-1 flex-1 py-2",
+        "flex flex-col items-center gap-1 flex-1 py-2 transition-colors",
         isActive
           ? "text-primary"
           : "text-muted-foreground hover:text-foreground"
       )}
     >
-      {/* 
-        We use a div wrapper for the icon to ensure consistent sizing.
-        This makes it easy to swap between a real icon and a placeholder div.
-      */}
       <div className="h-6 w-6 flex items-center justify-center">{icon}</div>
       <span className="text-xs font-medium">{label}</span>
-    </button>
+    </Link>
   );
 };
 
-// --- Main Bottom Navigation Component ---
 export type NavItem = {
   href: string;
   label: string;
@@ -54,7 +48,6 @@ export const BottomNav = ({ navItems }: BottomNavProps) => {
       <div className="flex justify-around items-center">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
-
           return (
             <BottomNavItem
               key={item.href}

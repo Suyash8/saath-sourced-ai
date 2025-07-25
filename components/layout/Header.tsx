@@ -1,21 +1,44 @@
 import { ReactNode } from "react";
-import { ArrowLeft, Bell, User } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 type HeaderProps = {
   title: string | ReactNode;
   subtitle?: string;
   variant?: "dashboard" | "page";
-  onBackClick?: () => void;
+  backHref?: string;
   children?: ReactNode;
   className?: string;
 };
+
+export const IconButton = ({
+  href,
+  icon: Icon,
+  className,
+}: {
+  href: string;
+  icon: React.ElementType;
+  className?: string;
+}) => (
+  <Button
+    variant="ghost"
+    size="icon"
+    className={cn("h-8 w-8 md:h-12 md:w-12", className)}
+    asChild
+  >
+    <Link href={href} aria-label="Go back">
+      <Icon className="!h-5 !w-5 md:!h-6 md:!w-6" />
+    </Link>
+  </Button>
+);
 
 export const Header = ({
   title,
   subtitle,
   variant = "page",
-  onBackClick,
+  backHref,
   children,
   className,
 }: HeaderProps) => {
@@ -26,49 +49,32 @@ export const Header = ({
         className
       )}
     >
-      {/* 
-        We add a container to manage horizontal padding and max-width on larger screens.
-        This prevents the header from stretching too wide on desktop.
-      */}
-
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4 h-16 md:h-20">
-          {/* Left Side of the Header */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Conditionally render the Back Button if onBackClick is provided */}
-            {onBackClick && (
-              <button
-                onClick={onBackClick}
-                className="p-1 -ml-1 md:p-2 md:-ml-2 hover:bg-muted rounded-md transition-colors"
-                aria-label="Go back"
-              >
-                <ArrowLeft className="h-5 w-5 md:h-6 md:w-6" />
-              </button>
+            {backHref && (
+              <IconButton href={backHref} icon={ArrowLeft} className="-ml-2" />
             )}
 
-            {/* Text Content */}
             <div>
-              {/* Apply responsive text sizes based on the 'variant' prop */}
               <h1
                 className={cn(
                   "font-semibold tracking-tight",
                   variant === "dashboard"
-                    ? "text-lg md:text-2xl" // Larger on mobile, even larger on desktop
-                    : "text-base md:text-xl" // Standard on mobile, larger on desktop
+                    ? "text-lg md:text-2xl"
+                    : "text-base md:text-xl"
                 )}
               >
                 {title}
               </h1>
               {subtitle && (
                 <p className="text-sm text-muted-foreground hidden sm:block">
-                  {/* Hide subtitle on very small screens to save space, show on sm and up */}
                   {subtitle}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Right Side of the Header (for children like icons) */}
           {children && (
             <div className="flex items-center gap-3 md:gap-4">{children}</div>
           )}
