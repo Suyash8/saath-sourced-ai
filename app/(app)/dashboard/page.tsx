@@ -4,6 +4,7 @@ import { Header, IconButton } from "@/components/layout/Header";
 import { Bell, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp } from "firebase-admin/firestore";
+import { GroupBuyCard } from "@/components/layout/GroupBuyCard";
 
 interface GroupBuy {
   id: string;
@@ -77,11 +78,7 @@ export default async function Home() {
         {groupBuys.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {groupBuys.map((buy) => (
-              <div key={buy.id} className="p-4 border rounded-lg">
-                <h3 className="font-bold">{buy.productName}</h3>
-                <p>ID: {buy.id}</p>
-                {/* Placeholder for the real card */}
-              </div>
+              <GroupBuyCard key={buy.id} buy={buy} />
             ))}
           </div>
         ) : (
