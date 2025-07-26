@@ -11,24 +11,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Clock, IndianRupee, MapPin } from "lucide-react";
-
-interface GroupBuy {
-  id: string;
-  productName: string;
-  pricePerKg: number;
-  targetQuantity: number;
-  currentQuantity: number;
-  expiryDate: { seconds: number; nanoseconds: number };
-  hubName: string;
-}
+import { SerializableGroupBuy } from "@/app/(app)/dashboard/page";
 
 type GroupBuyCardProps = {
-  buy: GroupBuy;
+  buy: SerializableGroupBuy;
 };
 
 export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
   const progress = (buy.currentQuantity / buy.targetQuantity) * 100;
-  const expiry = new Date(buy.expiryDate.seconds * 1000);
+  const expiry = new Date(buy.expiryDate);
   const now = new Date();
   const hoursLeft = Math.max(
     0,

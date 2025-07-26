@@ -1,12 +1,10 @@
-// "use client";
-
 import { Header, IconButton } from "@/components/layout/Header";
 import { Bell, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp } from "firebase-admin/firestore";
 import { GroupBuyCard } from "@/components/layout/GroupBuyCard";
 
-interface GroupBuy {
+interface FirestoreGroupBuy {
   id: string;
   productName: string;
   pricePerKg: number;
@@ -17,7 +15,18 @@ interface GroupBuy {
   hubName: string;
 }
 
-async function getGroupBuys(): Promise<GroupBuy[]> {
+export interface SerializableGroupBuy {
+  id: string;
+  productName: string;
+  pricePerKg: number;
+  targetQuantity: number;
+  currentQuantity: number;
+  status: "open" | "closed" | "fulfilled";
+  expiryDate: string;
+  hubName: string;
+}
+
+async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
   try {
     const firestore = getAdminApp().firestore();
     const groupBuysRef = firestore.collection("groupBuys");
@@ -30,13 +39,14 @@ async function getGroupBuys(): Promise<GroupBuy[]> {
       return [];
     }
 
-    const groupBuys: GroupBuy[] = snapshot.docs.map(
-      (doc) =>
-        ({
-          id: doc.id,
-          ...doc.data(),
-        } as GroupBuy)
-    );
+    const groupBuys: SerializableGroupBuy[] = snapshot.docs.map((doc) => {
+      const data = doc.data() as Omit<FirestoreGroupBuy, "id">;
+      return {
+        id: doc.id,
+        ...data,
+        expiryDate: data.expiryDate.toDate().toISOString(),
+      };
+    });
 
     return groupBuys;
   } catch (error) {
