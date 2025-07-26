@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,9 +32,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative flex min-h-screen flex-col">
-            <div className="absolute inset-0 z-0">{children}</div>
-          </div>
+          <AuthProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <div className="absolute inset-0 z-0">{children}</div>
+            </div>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
