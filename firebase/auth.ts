@@ -6,9 +6,7 @@ import {
   User,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { app } from "./config";
-
-export const auth = getAuth(app);
+import { auth } from "./config";
 
 export const signUpWithEmail = async (
   email: string,
