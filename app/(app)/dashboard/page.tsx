@@ -1,6 +1,7 @@
 "use client";
 
 import { Header, IconButton } from "@/components/layout/Header";
+import { ThemeToggler } from "@/components/layout/ThemeToggler";
 import { Bell, User } from "lucide-react";
 
 export default function Home() {
@@ -24,6 +25,12 @@ export default function Home() {
           className="!text-muted-foreground hover:!text-foreground"
         />
       </Header>
+      <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+        <h2 className="text-xl font-bold mb-4">Top Deals for You</h2>
+        <div className="text-center p-8 border-2 border-dashed rounded-lg">
+          <p className="text-muted-foreground">Loading deals...</p>
+        </div>
+      </main>
     </div>
   );
 }
