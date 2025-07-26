@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, updateProfile } from "firebase/auth";
+import { updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { signUpWithEmail } from "@/firebase/auth";
 import { db } from "@/firebase/config";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SaathiLogo } from "@/components/SaathiLogo";
+import { FirebaseError } from "firebase/app";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -53,13 +54,18 @@ export default function SignupPage() {
       }
 
       router.push("/dashboard");
-    } catch (err: any) {
-      if (err.code === "auth/email-already-in-use") {
+    } catch (err: unknown) {
+      if (
+        err instanceof FirebaseError &&
+        err.code === "auth/email-already-in-use"
+      ) {
         setError("This email address is already in use.");
-      } else {
+      } else if (err instanceof Error) {
         setError("Failed to create an account. Please try again.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
       }
-      console.error(err);
+      console.error("Signup failed:", err);
     } finally {
       setLoading(false);
     }
@@ -163,11 +169,11 @@ export default function SignupPage() {
 
       <div className="bg-card rounded-lg p-4 border border-border animate-fade-in">
         <div className="flex items-start gap-3">
-          <div className="text-primary text-2xl leading-none">"</div>
+          <div className="text-primary text-2xl leading-none">&quot;</div>
           <div>
             <p className="text-sm text-muted-foreground italic">
-              Join thousands of vendors saving money with Saathi's community
-              sourcing!
+              Join thousands of vendors saving money with Saathi&apos;s
+              community sourcing!
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               - Start saving today

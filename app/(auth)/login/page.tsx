@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SaathiLogo } from "@/components/SaathiLogo";
+import { FirebaseError } from "firebase/app";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -24,9 +25,20 @@ export default function LoginPage() {
     try {
       await signInWithEmail(email, password);
       router.push("/dashboard");
-    } catch (err: any) {
-      setError("Invalid email or password. Please try again.");
-      console.error("Login failed:", err);
+    } catch (err: unknown) {
+      if (err instanceof FirebaseError && err.code === "auth/wrong-password") {
+        setError("Invalid password. Please try again.");
+        console.error("Login failed:", err);
+      } else if (
+        err instanceof FirebaseError &&
+        err.code === "auth/user-not-found"
+      ) {
+        setError("No account found with that email. Please sign up.");
+        console.error("Login failed:", err);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+        console.error("Login failed:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -89,7 +101,7 @@ export default function LoginPage() {
 
           <div className="text-center">
             <span className="text-muted-foreground">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
             </span>
             <Link
               href="/signup"
@@ -103,7 +115,7 @@ export default function LoginPage() {
 
       <div className="bg-card rounded-lg p-4 border border-border animate-fade-in">
         <div className="flex items-start gap-3">
-          <div className="text-primary text-2xl leading-none">"</div>
+          <div className="text-primary text-2xl leading-none">&quot;</div>
           <div>
             <p className="text-sm text-muted-foreground italic">
               Saathi helped me save ₹2000 this month!

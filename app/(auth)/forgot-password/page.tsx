@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SaathiLogo } from "@/components/SaathiLogo";
 import { MailCheck } from "lucide-react";
+import { FirebaseError } from "firebase/app";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -26,9 +27,14 @@ export default function ForgotPasswordPage() {
       setMessage(
         "If an account with that email exists, a password reset link has been sent."
       );
-    } catch (err: any) {
-      setError("Failed to send reset email. Please try again.");
-      console.error("Password reset failed:", err);
+    } catch (err: unknown) {
+      if (err instanceof FirebaseError && err.code === "auth/user-not-found") {
+        setError("No account found with that email. Please sign up.");
+        console.error("Password reset failed:", err);
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+        console.error("Password reset failed:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -55,8 +61,8 @@ export default function ForgotPasswordPage() {
             className="space-y-6 animate-fade-in"
           >
             <p className="text-center text-sm text-muted-foreground">
-              No problem! Enter your email address and we'll send you a link to
-              get back into your account.
+              No problem! Enter your email address and we&apos;ll send you a
+              link to get back into your account.
             </p>
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium">
@@ -103,7 +109,7 @@ export default function ForgotPasswordPage() {
 
       <div className="bg-card rounded-lg p-4 border border-border animate-fade-in">
         <div className="flex items-start gap-3">
-          <div className="text-primary text-2xl leading-none">"</div>
+          <div className="text-primary text-2xl leading-none">&quot;</div>
           <div>
             <p className="text-sm text-muted-foreground italic">
               Accessing my account is always simple and secure with Saathi.
