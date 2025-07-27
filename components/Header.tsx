@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ThemeToggler } from "@/components/ThemeToggler";
 
 type HeaderProps = {
   title: string | ReactNode;
@@ -75,9 +76,10 @@ export const Header = ({
             </div>
           </div>
 
-          {children && (
-            <div className="flex items-center gap-3 md:gap-4">{children}</div>
-          )}
+          <div className="flex items-center gap-3 md:gap-4">
+            <ThemeToggler />
+            {children && children}
+          </div>
         </div>
       </div>
     </header>

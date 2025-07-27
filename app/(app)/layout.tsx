@@ -1,4 +1,4 @@
-import { BottomNav } from "@/components/layout/BottomNav";
+import { BottomNav } from "@/components/BottomNav";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { vendorNavItems } from "@/config/nav";
 
