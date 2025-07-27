@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .get();
 
-    let dealsData: any = null;
+    let dealsData: unknown = null;
 
     // If no deals exist, generate deals first
     if (dealsSnapshot.empty) {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       const dealsBatch = firestore.batch();
 
       // Add deals to Firestore
-      for (const deal of dealsData.deals) {
+      for (const deal of (dealsData as { deals: Deal[] }).deals) {
         const dealRef = firestore.collection("groupBuys").doc();
         const expiryDate = new Date();
         expiryDate.setHours(expiryDate.getHours() + deal.expiryHours);
@@ -140,10 +140,36 @@ export async function POST(request: NextRequest) {
     await ordersBatch.commit();
 
     const message = dealsSnapshot.empty
-      ? `Generated ${dealsData?.deals?.length || 0} deals and ${
-          ordersData.orders.length
+      ? `Generated ${(dealsData as { deals: Deal[] })?.deals?.length || 0} deals and ${
+          (ordersData.orders as Order[]).length
         } orders`
-      : `Successfully generated ${ordersData.orders.length} mock orders`;
+      : `Successfully generated ${(ordersData.orders as Order[]).length} mock orders`;
+// Add at the top after imports
+type Deal = {
+  productName: string;
+  pricePerKg: number;
+  targetQuantity: number;
+  currentQuantity: number;
+  status: string;
+  hubName: string;
+  hubId: string;
+  supplierId: string;
+  supplierName: string;
+  description: string;
+  expiryHours: number;
+};
+
+type Order = {
+  productName: string;
+  quantity: number;
+  pricePerKg: number;
+  total: number;
+  status: string;
+  groupBuyId: string;
+  hubName: string;
+  orderDate: string;
+  estimatedDelivery: string;
+};
 
     return NextResponse.json({
       message,
