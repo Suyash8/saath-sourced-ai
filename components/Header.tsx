@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ThemeToggler } from "@/components/layout/ThemeToggler";
+import { ThemeToggler } from "@/components/ThemeToggler";
 
 type HeaderProps = {
   title: string | ReactNode;
