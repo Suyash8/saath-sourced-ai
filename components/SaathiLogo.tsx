@@ -3,8 +3,10 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const sizeMap = {
-  sm: { width: 120, height: 40 },
-  lg: { width: 200, height: 67 },
+  xs: { width: 50, height: 17 },
+  sm: { width: 80, height: 27 },
+  md: { width: 120, height: 40 },
+  lg: { width: 160, height: 53 },
 };
 
 type LogoProps = {

@@ -103,45 +103,70 @@ export default async function Home() {
 
   return (
     <div>
-      <Header
-        variant="dashboard"
-        title={`Good morning, ${userName}!`}
-        subtitle={
-          groupBuys.length > 0
-            ? `Saathi has found ${groupBuys.length} new high-value deals for you.`
-            : "Saathi is searching for deals near you..."
-        }
-      >
-        <IconButton
-          href="/notifications"
-          icon={Bell}
-          className="!text-muted-foreground hover:!text-foreground"
-          badgeCount={notificationCount}
-        />
-        <IconButton
-          href="/profile"
-          icon={User}
-          className="!text-muted-foreground hover:!text-foreground"
-        />
-      </Header>
+      <div className="animate-in fade-in-0 slide-in-from-top-4 duration-500">
+        <Header
+          variant="dashboard"
+          title={`Good morning, ${userName}!`}
+          subtitle={
+            groupBuys.length > 0
+              ? `Saathi has found ${groupBuys.length} new high-value deals for you.`
+              : "Saathi is searching for deals near you..."
+          }
+        >
+          <div className="animate-in fade-in-0 slide-in-from-right-4 duration-500 delay-100">
+            <IconButton
+              href="/notifications"
+              icon={Bell}
+              className="!text-muted-foreground hover:!text-foreground transition-all duration-200 hover:scale-110"
+              badgeCount={notificationCount}
+            />
+          </div>
+          <div className="animate-in fade-in-0 slide-in-from-right-4 duration-500 delay-200">
+            <IconButton
+              href="/profile"
+              icon={User}
+              className="!text-muted-foreground hover:!text-foreground transition-all duration-200 hover:scale-110"
+            />
+          </div>
+        </Header>
+      </div>
 
       <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-        <h2 className="text-xl font-bold mb-4">Top Deals for You</h2>
+        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+          <h2 className="text-xl font-bold mb-4 animate-in fade-in-0 slide-in-from-left-4 duration-500 delay-200">
+            Top Deals for You
+          </h2>
 
-        {groupBuys.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 grid-flow-row-dense">
-            {groupBuys.map((buy) => (
-              <GroupBuyCard key={buy.id} buy={buy} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center p-8 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">
-              No active deals found right now.
-            </p>
-            <p className="text-sm text-muted-foreground">Check back soon!</p>
-          </div>
-        )}
+          {groupBuys.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 grid-flow-row-dense">
+              {groupBuys.map((buy, index) => (
+                <div
+                  key={buy.id}
+                  className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
+                  style={{
+                    animationDelay: `${300 + index * 100}ms`,
+                    animationFillMode: "both",
+                  }}
+                >
+                  <div className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
+                    <GroupBuyCard buy={buy} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center p-8 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500 delay-300 hover:border-primary/50 transition-colors">
+              <div className="animate-pulse">
+                <p className="text-muted-foreground">
+                  No active deals found right now.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Check back soon!
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
