@@ -69,3 +69,27 @@ export async function joinGroupBuyAction(
     };
   }
 }
+
+export async function acceptGroupBuyAction(
+  groupBuyId: string
+): Promise<{ success: boolean; message: string }> {
+  const supplierId = await getUserIdFromSession();
+  if (!supplierId) {
+    return { success: false, message: "Authentication failed." };
+  }
+
+  const firestore = getAdminApp().firestore();
+  const groupBuyRef = firestore.collection("groupBuys").doc(groupBuyId);
+
+  try {
+    await groupBuyRef.update({
+      status: "processing",
+      supplierId: supplierId,
+    });
+
+    revalidatePath("/supplier");
+    return { success: true, message: "Deal accepted successfully." };
+  } catch (error: any) {
+    return { success: false, message: "Failed to accept the deal." };
+  }
+}
