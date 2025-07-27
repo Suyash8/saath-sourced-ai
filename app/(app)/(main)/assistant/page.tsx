@@ -1,0 +1,129 @@
+"use client";
+
+import { Header } from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Send, BrainCircuit, User } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import Markdown from "react-markdown";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export default function AssistantPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(scrollToBottom, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/ai/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: input }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to get a response from the assistant.");
+      }
+
+      const data = await response.json();
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: data.reply,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error:", error);
+      const errorMessage: Message = {
+        role: "assistant",
+        content:
+          "Sorry, I'm having trouble connecting right now. Please try again later.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header title="AI Assistant" backHref="/dashboard" />
+
+      <div className="container mx-auto p-4 space-y-4 pb-32 md:pb-24">
+        {messages.map((msg, index) => (
+          <div
+            key={index}
+            className={`flex items-start gap-3 ${
+              msg.role === "user" ? "justify-end" : ""
+            }`}
+          >
+            {msg.role === "assistant" && (
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                <BrainCircuit className="h-5 w-5" />
+              </div>
+            )}
+            <div
+              className={`prose prose-sm max-w-lg rounded-lg px-4 py-2 ${
+                msg.role === "user" ? "bg-muted" : "bg-card border"
+              }`}
+            >
+              <Markdown>{msg.content}</Markdown>
+            </div>
+            {msg.role === "user" && (
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted-foreground text-background flex items-center justify-center">
+                <User className="h-5 w-5" />
+              </div>
+            )}
+          </div>
+        ))}
+        {isLoading && (
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center animate-pulse">
+              <BrainCircuit className="h-5 w-5" />
+            </div>
+            <div className="rounded-lg px-4 py-2 bg-card border">
+              <p className="text-sm animate-pulse">Saathi is thinking...</p>
+            </div>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+
+      <div className="fixed bottom-20 md:bottom-0 left-0 right-0 bg-card border-t p-4">
+        <form
+          onSubmit={handleSendMessage}
+          className="flex items-center gap-2 container mx-auto"
+        >
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Ask Saathi anything..."
+            className="flex-1"
+            disabled={isLoading}
+          />
+          <Button type="submit" disabled={isLoading}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+}
