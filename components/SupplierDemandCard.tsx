@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import Link from "next/link";
 
 export interface Demand {
   id: string;
@@ -56,10 +57,14 @@ export const SupplierDemandCard = ({ demand }: { demand: Demand }) => {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CardTitle className="text-base">{demand.productName}</CardTitle>
-          <StatusBadge status={demand.status} />
-        </div>
+        <Link href={`/supplier/demands/${demand.id}`}>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-base hover:underline">
+              {demand.productName}
+            </CardTitle>
+            <StatusBadge status={demand.status} />
+          </div>
+        </Link>
         <CardDescription>
           Total Quantity: {demand.currentQuantity}kg • Target Hub:{" "}
           {demand.hubName}

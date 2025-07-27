@@ -11,10 +11,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Clock, IndianRupee, MapPin, Minus, Plus } from "lucide-react";
-import { SerializableGroupBuy } from "@/app/(app)/dashboard/page";
+import { SerializableGroupBuy } from "@/app/(app)/(main)/dashboard/page";
 import { joinGroupBuyAction } from "@/app/actions";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import Link from "next/link";
 
 type GroupBuyCardProps = {
   buy: SerializableGroupBuy;
@@ -61,25 +62,27 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
     }
   };
 
-  const handleJoin = async () => {
+  const handleJoin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+
     setLoading(true);
     setMessage("");
     const result = await joinGroupBuyAction(buy.id, quantity);
     setMessage(result.message);
     setLoading(false);
-
-    if (result.success) {
-      setTimeout(() => setMessage(""), 3000);
-    }
   };
 
   return (
     <Card className="flex flex-col">
       <CardHeader>
-        <CardTitle>{buy.productName}</CardTitle>
-        <CardDescription>
-          High-quality produce, sourced directly.
-        </CardDescription>
+        {" "}
+        <Link href={`/deals/${buy.id}`} className="block h-full">
+          <CardTitle className="hover:underline">{buy.productName}</CardTitle>
+          <CardDescription>
+            High-quality produce, sourced directly.
+          </CardDescription>
+        </Link>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
         <div className="text-3xl font-bold flex items-center">

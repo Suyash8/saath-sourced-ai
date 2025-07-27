@@ -86,7 +86,7 @@ export default async function Home() {
         <h2 className="text-xl font-bold mb-4">Top Deals for You</h2>
 
         {groupBuys.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 grid-flow-row-dense">
             {groupBuys.map((buy) => (
               <GroupBuyCard key={buy.id} buy={buy} />
             ))}
