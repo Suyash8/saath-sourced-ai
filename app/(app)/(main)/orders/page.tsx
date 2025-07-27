@@ -3,6 +3,8 @@ import { StatusBadge, OrderStatus } from "@/components/StatusBadge";
 import { getAdminApp } from "@/firebase/adminConfig";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
+import { getUserIdFromSession } from "@/app/actions";
+import { redirect } from "next/navigation";
 
 interface PopulatedOrder {
   id: string;
@@ -11,10 +13,6 @@ interface PopulatedOrder {
   status: OrderStatus;
   createdAt: { seconds: number };
   productName: string;
-}
-
-async function getCurrentUserId(): Promise<string | null> {
-  return "mock-user-id";
 }
 
 async function getMyOrders(userId: string): Promise<PopulatedOrder[]> {
@@ -42,8 +40,14 @@ async function getMyOrders(userId: string): Promise<PopulatedOrder[]> {
 }
 
 export default async function OrdersPage() {
-  const userId = await getCurrentUserId();
-  const allOrders = await getMyOrders(userId!);
+  const userId = await getUserIdFromSession();
+
+  // If no user is logged in, redirect them to the login page.
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const allOrders = await getMyOrders(userId);
 
   const activeStatuses: OrderStatus[] = ["confirmed", "processing", "at_hub"];
   const activeOrders = allOrders.filter((o) =>

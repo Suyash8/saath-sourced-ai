@@ -1,8 +1,9 @@
 import { Header, IconButton } from "@/components/Header";
 import { Bell, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
-import { Timestamp } from "firebase-admin/firestore";
+import { Timestamp, DocumentData } from "firebase-admin/firestore";
 import { GroupBuyCard } from "@/components/GroupBuyCard";
+import { getUserIdFromSession } from "@/app/actions";
 
 interface FirestoreGroupBuy {
   id: string;
@@ -24,6 +25,24 @@ export interface SerializableGroupBuy {
   status: "open" | "closed" | "fulfilled";
   expiryDate: string;
   hubName: string;
+}
+
+async function getUserData(
+  userId: string | null
+): Promise<DocumentData | null> {
+  if (!userId) return null;
+  try {
+    const userDoc = await getAdminApp()
+      .firestore()
+      .collection("users")
+      .doc(userId)
+      .get();
+    if (!userDoc.exists) return null;
+    return userDoc.data() || null;
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+    return null;
+  }
 }
 
 async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
@@ -56,7 +75,9 @@ async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
 }
 
 export default async function Home() {
-  const userName = "User";
+  const userId = await getUserIdFromSession();
+  const userData = await getUserData(userId);
+  const userName = userData?.name || "User";
   const groupBuys = await getGroupBuys();
 
   return (
