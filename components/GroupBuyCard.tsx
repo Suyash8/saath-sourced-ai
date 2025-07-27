@@ -39,6 +39,10 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
     const result = await joinGroupBuyAction(buy.id, quantity);
     setMessage(result.message);
     setLoading(false);
+
+    if (result.success) {
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
   return (

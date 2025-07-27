@@ -11,7 +11,17 @@ import {
 import { StatusBadge, DemandStatus } from "./StatusBadge";
 import { BarChart } from "./BarChart";
 import { Button } from "./ui/button";
-import { acceptGroupBuyAction } from "@/app/actions";
+import {
+  acceptGroupBuyAction,
+  updateGroupBuyStatusAction,
+} from "@/app/actions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface Demand {
   id: string;
@@ -23,13 +33,7 @@ export interface Demand {
   deliveryDate: string;
 }
 
-export const SupplierDemandCard = ({
-  demand,
-  isAccepted = false,
-}: {
-  demand: Demand;
-  isAccepted?: boolean;
-}) => {
+export const SupplierDemandCard = ({ demand }: { demand: Demand }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -39,6 +43,15 @@ export const SupplierDemandCard = ({
     setMessage(result.message);
     setLoading(false);
   };
+
+  const handleStatusUpdate = async (newStatus: string) => {
+    setLoading(true);
+    const result = await updateGroupBuyStatusAction(demand.id, newStatus);
+    setMessage(result.message);
+    setLoading(false);
+  };
+
+  const isAccepted = demand.status === "in-progress";
 
   return (
     <Card>
@@ -60,9 +73,8 @@ export const SupplierDemandCard = ({
           <BarChart
             data={[
               {
-                label: "Vendors",
-                value: demand.vendorCount,
-                color: "hsl(var(--primary))",
+                label: `${demand.vendorCount} Vendors`,
+                value: demand.currentQuantity,
               },
             ]}
             height={40}
@@ -70,15 +82,24 @@ export const SupplierDemandCard = ({
         </div>
         <div className="flex justify-between items-center text-sm pt-2 border-t">
           <span className="text-muted-foreground">
-            {demand.vendorCount} vendors • Delivery by: {demand.deliveryDate}
+            Delivery by: {demand.deliveryDate}
           </span>
           {isAccepted ? (
-            <Button size="sm" variant="outline">
-              Update Status
-            </Button>
+            <div className="flex gap-2 items-center">
+              <Select onValueChange={handleStatusUpdate}>
+                <SelectTrigger className="w-[180px] h-9">
+                  <SelectValue placeholder="Update Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="at_hub">Delivered to Hub</SelectItem>
+                  <SelectItem value="fulfilled">Fulfilled</SelectItem>
+                  <SelectItem value="cancelled">Cancel Deal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           ) : (
             <Button size="sm" onClick={handleAccept} disabled={loading}>
-              {loading ? "Accepting..." : "View & Accept"}
+              {loading ? "Accepting..." : "Accept Demand"}
             </Button>
           )}
         </div>
