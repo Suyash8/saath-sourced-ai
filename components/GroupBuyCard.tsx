@@ -10,14 +10,21 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Clock, IndianRupee, MapPin } from "lucide-react";
+import { Clock, IndianRupee, MapPin, Minus, Plus } from "lucide-react";
 import { SerializableGroupBuy } from "@/app/(app)/dashboard/page";
+import { joinGroupBuyAction } from "@/app/actions";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 type GroupBuyCardProps = {
   buy: SerializableGroupBuy;
 };
 
 export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
+  const [quantity, setQuantity] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
   const progress = (buy.currentQuantity / buy.targetQuantity) * 100;
   const expiry = new Date(buy.expiryDate);
   const now = new Date();
@@ -25,6 +32,14 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
     0,
     Math.round((expiry.getTime() - now.getTime()) / (1000 * 60 * 60))
   );
+
+  const handleJoin = async () => {
+    setLoading(true);
+    setMessage("");
+    const result = await joinGroupBuyAction(buy.id, quantity);
+    setMessage(result.message);
+    setLoading(false);
+  };
 
   return (
     <Card className="flex flex-col">
@@ -66,8 +81,37 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button className="w-full">Join Deal</Button>
+      <CardFooter className="flex-col items-stretch gap-2">
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="w-20 text-center"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setQuantity((q) => q + 1)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button onClick={handleJoin} disabled={loading} className="w-full">
+          {loading ? "Joining..." : `Join Deal (${quantity}kg)`}
+        </Button>
+        {message && (
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            {message}
+          </p>
+        )}
       </CardFooter>
     </Card>
   );
