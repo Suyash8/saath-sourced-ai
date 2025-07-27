@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { RoleSelector } from "./RoleSelector";
 import { VendorQuestionnaire } from "./VendorQuestionnaire";
 import { SupplierQuestionnaire } from "./SupplierQuestionnaire";
@@ -112,6 +111,17 @@ export function UserOnboarding() {
             email: user.email || "",
           });
         }
+
+        // Set initial step based on available data
+        const displayName = user.displayName || "";
+        const [firstName = "", lastName = ""] = displayName.split(" ");
+        const hasPersonalInfo = firstName && lastName && user.email;
+
+        if (hasPersonalInfo) {
+          setCurrentStep("roles");
+        } else {
+          setCurrentStep("personal");
+        }
       } catch (error) {
         console.error("UserOnboarding: Error fetching user data:", error);
 
@@ -124,6 +134,13 @@ export function UserOnboarding() {
           lastName,
           email: user.email || "",
         });
+
+        // Set initial step
+        if (firstName && lastName && user.email) {
+          setCurrentStep("roles");
+        } else {
+          setCurrentStep("personal");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -135,19 +152,27 @@ export function UserOnboarding() {
   const getStepNumber = (step: OnboardingStep): number => {
     const stepMap = {
       personal: 1,
-      roles: 2,
-      vendor: 3,
-      supplier: 4,
-      complete: 5,
+      roles: 1, // Skip personal if we have info
+      vendor: 2,
+      supplier: 3,
+      complete: 4,
     };
     return stepMap[step];
   };
 
   const getTotalSteps = (): number => {
-    let total = 2; // personal + roles
+    let total = 1; // roles step
     if (selectedRoles.includes("vendor")) total++;
     if (selectedRoles.includes("supplier")) total++;
     return total + 1; // +1 for complete
+  };
+
+  const shouldSkipPersonalInfo = (): boolean => {
+    return !!(
+      personalInfo.firstName &&
+      personalInfo.lastName &&
+      personalInfo.email
+    );
   };
 
   const getProgressPercentage = (): number => {
@@ -255,7 +280,7 @@ export function UserOnboarding() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
@@ -269,7 +294,7 @@ export function UserOnboarding() {
                       }
                     />
                   </div>
-                  <div>
+                  <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
@@ -285,7 +310,7 @@ export function UserOnboarding() {
                   </div>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -355,8 +380,8 @@ export function UserOnboarding() {
         return (
           <div className="space-y-6 text-center">
             <div className="flex justify-center">
-              <div className="bg-green-100 p-4 rounded-full">
-                <CheckCircle className="h-12 w-12 text-green-600" />
+              <div className="bg-green-100 dark:bg-green-950/50 p-4 rounded-full">
+                <CheckCircle className="h-12 w-12 text-green-600 dark:text-green-400" />
               </div>
             </div>
 
@@ -401,16 +426,85 @@ export function UserOnboarding() {
     }
   };
 
+  const getStepsForDisplay = () => {
+    const steps = [];
+
+    if (!shouldSkipPersonalInfo()) {
+      steps.push({ key: "personal", label: "Personal Info" });
+    }
+
+    steps.push({ key: "roles", label: "Select Role" });
+
+    if (selectedRoles.includes("vendor")) {
+      steps.push({ key: "vendor", label: "Vendor Details" });
+    }
+
+    if (selectedRoles.includes("supplier")) {
+      steps.push({ key: "supplier", label: "Supplier Details" });
+    }
+
+    steps.push({ key: "complete", label: "Complete" });
+
+    return steps;
+  };
+
+  const getCurrentStepIndex = () => {
+    const steps = getStepsForDisplay();
+    return steps.findIndex((step) => step.key === currentStep) + 1;
+  };
+
+  const renderStepIndicator = () => {
+    const steps = getStepsForDisplay();
+    const currentStepIndex = getCurrentStepIndex();
+
+    return (
+      <div className="mb-8">
+        <div className="flex items-center justify-center space-x-2 mb-4">
+          {steps.map((step, index) => {
+            const stepNumber = index + 1;
+            const isActive = stepNumber === currentStepIndex;
+            const isCompleted = stepNumber < currentStepIndex;
+
+            return (
+              <div key={step.key} className="flex items-center">
+                <div
+                  className={`
+                    flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium
+                    ${
+                      isCompleted
+                        ? "bg-green-500 text-white"
+                        : isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
+                    }
+                  `}
+                >
+                  {isCompleted ? "✓" : stepNumber}
+                </div>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`
+                      w-8 h-0.5 mx-2
+                      ${isCompleted ? "bg-green-500" : "bg-muted"}
+                    `}
+                  />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-sm text-muted-foreground text-center">
+          Step {currentStepIndex} of {steps.length}:{" "}
+          {steps[currentStepIndex - 1]?.label}
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <Progress value={getProgressPercentage()} className="mb-2" />
-          <p className="text-sm text-muted-foreground text-center">
-            Step {getStepNumber(currentStep)} of {getTotalSteps()}
-          </p>
-        </div>
-
+        {renderStepIndicator()}
         {renderCurrentStep()}
       </div>
     </div>

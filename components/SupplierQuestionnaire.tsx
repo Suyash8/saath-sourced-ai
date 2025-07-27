@@ -130,7 +130,7 @@ export function SupplierQuestionnaire({
           <CardTitle>Business Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="businessName">Business/Farm Name</Label>
             <Input
               id="businessName"
@@ -140,7 +140,7 @@ export function SupplierQuestionnaire({
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="location">Business Location</Label>
             <Input
               id="location"
@@ -183,7 +183,7 @@ export function SupplierQuestionnaire({
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="capacity">Monthly supply capacity (kg)</Label>
               <Input
                 id="capacity"
@@ -196,7 +196,7 @@ export function SupplierQuestionnaire({
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="minimumOrder">Minimum order quantity (kg)</Label>
               <Input
                 id="minimumOrder"
@@ -210,7 +210,7 @@ export function SupplierQuestionnaire({
             </div>
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="businessDescription">Describe your business</Label>
             <Textarea
               id="businessDescription"

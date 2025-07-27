@@ -123,7 +123,7 @@ export function VendorQuestionnaire({
           <CardTitle>Business Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="businessType">
               What type of food business do you run?
             </Label>
@@ -135,7 +135,7 @@ export function VendorQuestionnaire({
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="location">Business Location</Label>
             <Input
               id="location"
@@ -177,7 +177,7 @@ export function VendorQuestionnaire({
             </Card>
           )}
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="dailyCustomers">Approximate daily customers</Label>
             <Input
               id="dailyCustomers"
@@ -190,7 +190,7 @@ export function VendorQuestionnaire({
             />
           </div>
 
-          <div>
+          <div className="space-y-2">
             <Label htmlFor="businessDescription">Describe your business</Label>
             <Textarea
               id="businessDescription"
