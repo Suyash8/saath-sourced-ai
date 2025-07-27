@@ -5,115 +5,87 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { StatusBadge, DemandStatus } from "./StatusBadge";
-import { BarChart } from "./BarChart";
-import { Button } from "./ui/button";
-import {
-  acceptGroupBuyAction,
-  updateGroupBuyStatusAction,
-} from "@/app/actions";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import Link from "next/link";
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { acceptGroupBuyAction } from "@/app/actions";
+import { StatusBadge } from "./StatusBadge";
 
 export interface Demand {
   id: string;
   productName: string;
   currentQuantity: number;
   hubName: string;
-  status: DemandStatus;
+  status: "new" | "in-progress";
   vendorCount: number;
   deliveryDate: string;
 }
 
-export const SupplierDemandCard = ({ demand }: { demand: Demand }) => {
+interface SupplierDemandCardProps {
+  demand: Demand;
+}
+
+export function SupplierDemandCard({ demand }: SupplierDemandCardProps) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [isAccepted, setIsAccepted] = useState(demand.status === "in-progress");
 
   const handleAccept = async () => {
     setLoading(true);
+    setMessage("");
     const result = await acceptGroupBuyAction(demand.id);
+    if (result.success) {
+      setIsAccepted(true);
+    }
     setMessage(result.message);
     setLoading(false);
   };
-
-  const handleStatusUpdate = async (newStatus: string) => {
-    setLoading(true);
-    const result = await updateGroupBuyStatusAction(demand.id, newStatus);
-    setMessage(result.message);
-    setLoading(false);
-  };
-
-  const isAccepted = demand.status === "in-progress";
 
   return (
     <Card>
       <CardHeader>
-        <Link href={`/supplier/demands/${demand.id}`}>
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-base hover:underline">
-              {demand.productName}
-            </CardTitle>
-            <StatusBadge status={demand.status} />
-          </div>
-        </Link>
-        <CardDescription>
-          Total Quantity: {demand.currentQuantity}kg • Target Hub:{" "}
-          {demand.hubName}
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{demand.productName}</CardTitle>
+          <StatusBadge status={isAccepted ? "in-progress" : demand.status} />
+        </div>
+        <CardDescription>Deliver To: {demand.hubName}</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p className="text-sm font-medium text-muted-foreground mb-2">
-            Order Breakdown (Example):
-          </p>
-          <BarChart
-            data={[
-              {
-                label: `${demand.vendorCount} Vendors`,
-                value: demand.currentQuantity,
-              },
-            ]}
-            height={40}
-          />
+          <p className="text-muted-foreground">Total Demand</p>
+          <p className="font-semibold">{demand.currentQuantity} kg</p>
         </div>
-        <div className="flex justify-between items-center text-sm pt-2 border-t">
-          <span className="text-muted-foreground">
-            Delivery by: {demand.deliveryDate}
-          </span>
-          {isAccepted ? (
-            <div className="flex gap-2 items-center">
-              <Select onValueChange={handleStatusUpdate}>
-                <SelectTrigger className="w-[180px] h-9">
-                  <SelectValue placeholder="Update Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="at_hub">Delivered to Hub</SelectItem>
-                  <SelectItem value="fulfilled">Fulfilled</SelectItem>
-                  <SelectItem value="cancelled">Cancel Deal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <Button size="sm" onClick={handleAccept} disabled={loading}>
-              {loading ? "Accepting..." : "Accept Demand"}
-            </Button>
-          )}
+        <div>
+          <p className="text-muted-foreground">Vendors</p>
+          <p className="font-semibold">{demand.vendorCount}</p>
         </div>
+        <div>
+          <p className="text-muted-foreground">Deliver By</p>
+          <p className="font-semibold">{demand.deliveryDate}</p>
+        </div>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-2">
+        {!isAccepted && (
+          <Button
+            className="w-full"
+            onClick={handleAccept}
+            disabled={loading || isAccepted}
+          >
+            {loading ? "Accepting..." : "Accept Demand"}
+          </Button>
+        )}
         {message && (
-          <p className="text-xs text-center text-muted-foreground mt-2">
+          <p
+            className={`text-xs w-full text-center ${
+              isAccepted ? "text-green-600" : "text-destructive"
+            }`}
+          >
             {message}
           </p>
         )}
-      </CardContent>
+      </CardFooter>
     </Card>
   );
-};
+}

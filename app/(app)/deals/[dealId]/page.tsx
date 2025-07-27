@@ -1,3 +1,5 @@
+// app/(app)/deals/[dealId]/page.tsx
+
 import { getAdminApp } from "@/firebase/adminConfig";
 import { notFound } from "next/navigation";
 import { Header } from "@/components/Header";
@@ -9,25 +11,31 @@ async function getDealDetails(dealId: string) {
     const dealDoc = await firestore.collection("groupBuys").doc(dealId).get();
     if (!dealDoc.exists) return null;
 
-    const mockUsers = [
-      {
-        id: "1",
-        name: "Raju",
-        avatar: "https://i.pravatar.cc/40?u=a042581f4e29026704d",
-      },
-      {
-        id: "2",
-        name: "Priya",
-        avatar: "https://i.pravatar.cc/40?u=a042581f4e29026705d",
-      },
-      {
-        id: "3",
-        name: "Amit",
-        avatar: "https://i.pravatar.cc/40?u=a042581f4e29026706d",
-      },
-    ];
-
     const dealData = dealDoc.data();
+
+    const ordersSnapshot = await firestore
+      .collection("orders")
+      .where("groupBuyId", "==", dealId)
+      .limit(5)
+      .get();
+
+    const userIds = ordersSnapshot.docs.map((doc) => doc.data().userId);
+    let users: {
+      id: string;
+      name: string;
+      avatar: string;
+    }[] = [];
+    if (userIds.length > 0) {
+      const usersSnapshot = await firestore
+        .collection("users")
+        .where("uid", "in", userIds)
+        .get();
+      users = usersSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name,
+        avatar: doc.data().avatar || `https://i.pravatar.cc/40?u=${doc.id}`,
+      }));
+    }
 
     return {
       id: dealDoc.id,
@@ -35,9 +43,10 @@ async function getDealDetails(dealId: string) {
       pricePerKg: dealData?.pricePerKg,
       targetQuantity: dealData?.targetQuantity,
       currentQuantity: dealData?.currentQuantity,
-      vendorCount: dealData?.vendorCount,
+      vendorCount: dealData?.vendorCount || 0,
       imageUrl: dealData?.imageUrl,
-      users: mockUsers,
+      hubName: dealData?.hubName,
+      users: users,
     };
   } catch (error) {
     console.error("Error fetching deal details:", error);
@@ -51,6 +60,11 @@ export default async function DealDetailsPage({
   params: Promise<{ dealId: string }>;
 }) {
   const { dealId } = await params;
+
+  if (!dealId) {
+    notFound();
+  }
+
   const deal = await getDealDetails(dealId);
 
   if (!deal) {

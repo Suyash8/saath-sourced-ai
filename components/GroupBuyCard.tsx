@@ -25,8 +25,6 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
   const [quantity, setQuantity] = useState(10);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const progress = (buy.currentQuantity / buy.targetQuantity) * 100;
   const expiry = new Date(buy.expiryDate);
@@ -35,32 +33,6 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
     0,
     Math.round((expiry.getTime() - now.getTime()) / (1000 * 60 * 60))
   );
-
-  const fetchAiSummary = async () => {
-    if (aiSummary) return;
-    setIsSummaryLoading(true);
-    try {
-      const response = await fetch("/api/summarize-deal", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productName: buy.productName,
-          pricePerKg: buy.pricePerKg,
-          hubName: buy.hubName,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch summary");
-      }
-      const data = await response.json();
-      setAiSummary(data.summary);
-    } catch (error) {
-      console.error(error);
-      setAiSummary("Could not load AI summary."); // Provide fallback message
-    } finally {
-      setIsSummaryLoading(false);
-    }
-  };
 
   const handleJoin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -74,77 +46,61 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
   };
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        {" "}
+    <Card className="flex flex-col group hover:shadow-md transition-all duration-300 border-border hover:border-primary/20">
+      <CardHeader className="transition-colors duration-200 group-hover:bg-muted/30">
         <Link href={`/deals/${buy.id}`} className="block h-full">
-          <CardTitle className="hover:underline">{buy.productName}</CardTitle>
-          <CardDescription>
+          <CardTitle className="hover:underline transition-colors duration-200 group-hover:text-primary">
+            {buy.productName}
+          </CardTitle>
+          <CardDescription className="transition-colors duration-200">
             High-quality produce, sourced directly.
           </CardDescription>
         </Link>
       </CardHeader>
       <CardContent className="flex-grow space-y-4">
-        <div className="text-3xl font-bold flex items-center">
-          <IndianRupee className="h-6 w-6 mr-1" />
+        <div className="text-3xl font-bold flex items-center group-hover:text-primary transition-colors duration-300">
+          <IndianRupee className="h-6 w-6 mr-1 transition-transform duration-200 group-hover:scale-110" />
           {buy.pricePerKg}
-          <span className="text-lg font-normal text-muted-foreground ml-1">
+          <span className="text-lg font-normal text-muted-foreground ml-1 transition-colors duration-200">
             / kg
           </span>
         </div>
 
-        <div>
+        <div className="space-y-2">
           <div className="flex justify-between items-center mb-1 text-sm">
-            <span className="font-medium">
+            <span className="font-medium transition-colors duration-200 group-hover:text-foreground">
               {buy.currentQuantity}kg / {buy.targetQuantity}kg
             </span>
-            <span className="text-primary font-semibold">
+            <span className="text-primary font-semibold transition-all duration-300 group-hover:scale-105">
               {progress.toFixed(0)}%
             </span>
           </div>
-          <Progress value={progress} />
+          <div className="transition-transform duration-300 group-hover:scale-[1.01]">
+            <Progress
+              value={progress}
+              className="transition-all duration-500"
+            />
+          </div>
         </div>
 
         <div className="text-sm text-muted-foreground space-y-2">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
+          <div className="flex items-center gap-2 transition-all duration-200 hover:text-foreground">
+            <Clock className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
             <span>Closes in ~{hoursLeft} hours</span>
           </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" />
+          <div className="flex items-center gap-2 transition-all duration-200 hover:text-foreground">
+            <MapPin className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
             <span>Pickup at {buy.hubName}</span>
           </div>
         </div>
-
-        <div className="pt-4 border-t">
-          {aiSummary ? (
-            <div className="text-sm text-muted-foreground space-y-1">
-              {aiSummary.split("\n").map((line, index) => (
-                <p key={index}>{line}</p>
-              ))}
-              <p className="text-xs text-right text-purple-600 italic mt-2">
-                Summarized by Saathi AI ✨
-              </p>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full"
-              onClick={fetchAiSummary}
-              disabled={isSummaryLoading}
-            >
-              {isSummaryLoading ? "Saathi is thinking..." : "Get AI Summary"}
-            </Button>
-          )}
-        </div>
       </CardContent>
-      <CardFooter className="flex-col items-stretch gap-2">
+      <CardFooter className="flex-col items-stretch gap-2 transition-colors duration-200 group-hover:bg-muted/20">
         <div className="flex items-center justify-center gap-2">
           <Button
             variant="outline"
             size="icon"
             onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+            className="transition-all duration-200 hover:scale-110 hover:bg-primary/10"
           >
             <Minus className="h-4 w-4" />
           </Button>
@@ -152,21 +108,30 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
             type="number"
             value={quantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
-            className="w-20 text-center"
+            className="w-20 text-center transition-all duration-200 focus:scale-105 focus:shadow-sm"
           />
           <Button
             variant="outline"
             size="icon"
             onClick={() => setQuantity((q) => q + 1)}
+            className="transition-all duration-200 hover:scale-110 hover:bg-primary/10"
           >
             <Plus className="h-4 w-4" />
           </Button>
         </div>
-        <Button onClick={handleJoin} disabled={loading} className="w-full">
-          {loading ? "Joining..." : `Join Deal (${quantity}kg)`}
+        <Button
+          onClick={handleJoin}
+          disabled={loading}
+          className="w-full transition-all duration-300 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+        >
+          {loading ? (
+            <span className="animate-pulse">Joining...</span>
+          ) : (
+            `Join Deal (${quantity}kg)`
+          )}
         </Button>
         {message && (
-          <p className="text-xs text-center text-muted-foreground mt-2">
+          <p className="text-xs text-center text-muted-foreground mt-2 animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
             {message}
           </p>
         )}

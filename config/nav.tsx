@@ -1,4 +1,4 @@
-import { Home, Package, TrendingUp } from "lucide-react";
+import { BrainCircuit, Home, Package, TrendingUp } from "lucide-react";
 import { NavItem } from "@/components/BottomNav";
 
 const PlaceholderIcon = () => (
@@ -9,19 +9,25 @@ export const vendorNavItems: NavItem[] = [
   {
     href: "/dashboard",
     label: "Deals",
-    icon: <Home className="h-6 w-6" />,
+    icon: <Home />,
     placeholderIcon: <PlaceholderIcon />,
   },
   {
     href: "/orders",
     label: "Orders",
-    icon: <Package className="h-6 w-6" />,
+    icon: <Package />,
     placeholderIcon: <PlaceholderIcon />,
   },
   {
     href: "/supplier",
     label: "Supplier",
-    icon: <TrendingUp className="h-6 w-6" />,
+    icon: <TrendingUp />,
+    placeholderIcon: <PlaceholderIcon />,
+  },
+  {
+    href: "/assistant",
+    label: "Assistant",
+    icon: <BrainCircuit />,
     placeholderIcon: <PlaceholderIcon />,
   },
 ];

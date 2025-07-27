@@ -23,17 +23,34 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmail(email, password);
+      const user = await signInWithEmail(email, password);
+      const idToken = await user.getIdToken();
+
+      const res = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to create session.");
+      }
+
       router.push("/dashboard");
     } catch (err: unknown) {
-      if (err instanceof FirebaseError && err.code === "auth/wrong-password") {
-        setError("Invalid password. Please try again.");
-        console.error("Login failed:", err);
-      } else if (
-        err instanceof FirebaseError &&
-        err.code === "auth/user-not-found"
-      ) {
-        setError("No account found with that email. Please sign up.");
+      if (err instanceof FirebaseError) {
+        switch (err.code) {
+          case "auth/wrong-password":
+          case "auth/invalid-credential":
+            setError("Invalid email or password. Please try again.");
+            break;
+          case "auth/user-not-found":
+            setError("No account found with that email. Please sign up.");
+            break;
+          default:
+            setError("An unexpected error occurred. Please try again.");
+            break;
+        }
         console.error("Login failed:", err);
       } else {
         setError("An unexpected error occurred. Please try again.");

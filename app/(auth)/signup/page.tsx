@@ -41,16 +41,28 @@ export default function SignupPage() {
     try {
       const user = await signUpWithEmail(formData.email, formData.password);
 
-      if (user) {
-        await updateProfile(user, { displayName: formData.name });
+      await updateProfile(user, { displayName: formData.name });
+      await updateProfile(user, { displayName: formData.name });
 
-        await setDoc(doc(db, "users", user.uid), {
-          uid: user.uid,
-          name: formData.name,
-          email: formData.email,
-          role: "vendor",
-          createdAt: new Date(),
-        });
+      await updateProfile(user, { displayName: formData.name });
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        name: formData.name,
+        email: formData.email,
+        role: "vendor",
+        createdAt: new Date(),
+      });
+
+      const idToken = await user.getIdToken();
+      const res = await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to create session.");
       }
 
       router.push("/dashboard");
@@ -61,7 +73,7 @@ export default function SignupPage() {
       ) {
         setError("This email address is already in use.");
       } else if (err instanceof Error) {
-        setError("Failed to create an account. Please try again.");
+        setError(`Failed to create an account: ${err.message}`);
       } else {
         setError("An unexpected error occurred. Please try again.");
       }

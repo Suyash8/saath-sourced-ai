@@ -43,6 +43,11 @@ export default async function SupplierDemandDetailPage({
   params: Promise<{ demandId: string }>;
 }) {
   const { demandId } = await params;
+
+  if (!demandId) {
+    notFound();
+  }
+
   const demand = await getDemandDetails(demandId);
 
   if (!demand) {

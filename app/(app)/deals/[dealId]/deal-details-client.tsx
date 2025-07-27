@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AvatarStack } from "@/components/AvatarStack";
 import { ProgressBar } from "@/components/ProgressBar";
-import { Droplets, Eye } from "lucide-react";
+import {
+  BarChart,
+  BrainCircuit,
+  LineChart,
+  ShoppingBasket,
+} from "lucide-react";
 import Image from "next/image";
 import { joinGroupBuyAction } from "@/app/actions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Deal = {
   id: string;
@@ -22,10 +28,99 @@ type Deal = {
   users: { id: string; name: string; avatar?: string }[];
 };
 
+interface Analysis {
+  dealRating: "Excellent" | "Good" | "Standard";
+  profitabilityAnalysis: string;
+  restockingAdvice: string;
+  marketTrend: string;
+}
+
+const AILoadingState = () => (
+  <Card className="bg-muted/50 animate-pulse">
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2">
+        <BrainCircuit className="h-5 w-5 text-primary" />
+        Saathi Co-pilot Analysis
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-3">
+      <div className="h-4 bg-muted rounded w-3/4"></div>
+      <div className="h-4 bg-muted rounded w-full"></div>
+      <div className="h-4 bg-muted rounded w-1/2"></div>
+    </CardContent>
+  </Card>
+);
+
+const AIAnalysisCard = ({ analysis }: { analysis: Analysis }) => {
+  const ratingColors = {
+    Excellent: "bg-green-100 text-green-800 border-green-200",
+    Good: "bg-blue-100 text-blue-800 border-blue-200",
+    Standard: "bg-slate-100 text-slate-800 border-slate-200",
+  };
+
+  return (
+    <Card className={ratingColors[analysis.dealRating]}>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BrainCircuit className="h-5 w-5" />
+            Saathi Co-pilot Analysis
+          </div>
+          <Badge className="border-none">{analysis.dealRating} Deal</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-start gap-3">
+          <BarChart className="h-4 w-4 mt-1 flex-shrink-0" />
+          <p className="text-sm">
+            <strong>Profitability:</strong> {analysis.profitabilityAnalysis}
+          </p>
+        </div>
+        <div className="flex items-start gap-3">
+          <ShoppingBasket className="h-4 w-4 mt-1 flex-shrink-0" />
+          <p className="text-sm">
+            <strong>Restocking Tip:</strong> {analysis.restockingAdvice}
+          </p>
+        </div>
+        <div className="flex items-start gap-3">
+          <LineChart className="h-4 w-4 mt-1 flex-shrink-0" />
+          <p className="text-sm">
+            <strong>Market Pulse:</strong> {analysis.marketTrend}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
   const [quantity, setQuantity] = useState(5);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [analysisLoading, setAnalysisLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAnalysis = async () => {
+      setAnalysisLoading(true);
+      try {
+        const response = await fetch("/api/ai/co-pilot", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deal }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAnalysis(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch AI analysis", error);
+      } finally {
+        setAnalysisLoading(false);
+      }
+    };
+    fetchAnalysis();
+  }, [deal]);
 
   const handleJoin = async () => {
     setLoading(true);
@@ -52,10 +147,8 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
             height={200}
             className="w-full h-48 object-cover rounded-lg bg-muted"
           />
-          <Badge className="absolute top-3 right-3 bg-red-500 text-white border-transparent">
-            Save 20%
-          </Badge>
         </div>
+
         <div className="space-y-4">
           <div>
             <h2 className="text-xl font-semibold">{deal.productName}</h2>
@@ -63,6 +156,10 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
               ₹{deal.pricePerKg}/kg
             </p>
           </div>
+
+          {analysisLoading && <AILoadingState />}
+          {analysis && <AIAnalysisCard analysis={analysis} />}
+
           <div>
             <h3 className="font-medium mb-2">Group Buy Progress</h3>
             <ProgressBar value={progress} />
@@ -76,27 +173,8 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
               </span>
             </div>
           </div>
-          <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-            <h3 className="font-medium">Saathi&apos;s Quality Check</h3>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <Droplets className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground flex-1">
-                  Premium quality, sourced from trusted local farms.
-                </p>
-              </div>
-              <div className="flex items-start gap-3">
-                <Eye className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-muted-foreground flex-1">
-                  Excellent color, firmness, and taste.
-                </p>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground italic text-right">
-              Analyzed by Saathi AI
-            </p>
-          </div>
-          <div className="space-y-3">
+
+          <div className="space-y-3 pt-4">
             <Label className="text-base font-medium">Quantity (kg)</Label>
             <Input
               type="number"
