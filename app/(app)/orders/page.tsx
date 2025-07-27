@@ -1,8 +1,6 @@
 import { Header } from "@/components/Header";
 import { StatusBadge, OrderStatus } from "@/components/StatusBadge";
 import { getAdminApp } from "@/firebase/adminConfig";
-import { cookies } from "next/headers";
-import { auth } from "firebase-admin";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 

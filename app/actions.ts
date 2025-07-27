@@ -13,6 +13,7 @@ async function getUserIdFromSession(): Promise<string | null> {
     const decodedClaims = await auth().verifySessionCookie(sessionCookie, true);
     return decodedClaims.uid;
   } catch (error) {
+    console.error("Error verifying session cookie:", error);
     return null;
   }
 }
@@ -62,10 +63,10 @@ export async function joinGroupBuyAction(
     revalidatePath("/dashboard");
     revalidatePath("/orders");
     return { success: true, message: "Successfully joined the deal!" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
-      message: error.message || "Failed to join the deal.",
+      message: (error as Error).message || "Failed to join the deal.",
     };
   }
 }
@@ -89,7 +90,10 @@ export async function acceptGroupBuyAction(
 
     revalidatePath("/supplier");
     return { success: true, message: "Deal accepted successfully." };
-  } catch (error: any) {
-    return { success: false, message: "Failed to accept the deal." };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      message: (error as Error).message || "Failed to accept the deal.",
+    };
   }
 }

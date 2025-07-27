@@ -3,6 +3,7 @@ import { User } from "lucide-react";
 import Link from "next/link";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { SupplierDemandCard, Demand } from "@/components/SupplierDemandCard";
+import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
 async function getSupplierDemands(): Promise<{
   active: Demand[];
@@ -19,17 +20,20 @@ async function getSupplierDemands(): Promise<{
       .where("status", "==", "processing")
       .get();
 
-    const mapDocToDemand = (doc: any): Demand => ({
-      id: doc.id,
-      productName: doc.data().productName,
-      currentQuantity: doc.data().currentQuantity,
-      hubName: doc.data().hubName,
-      status: doc.data().status === "open" ? "new" : "in-progress",
-      vendorCount: doc.data().vendorCount || 0,
-      deliveryDate: new Date(
-        doc.data().expiryDate.seconds * 1000
-      ).toLocaleDateString(),
-    });
+    const mapDocToDemand = (doc: QueryDocumentSnapshot): Demand => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        productName: data.productName,
+        currentQuantity: data.currentQuantity,
+        hubName: data.hubName,
+        status: data.status === "open" ? "new" : "in-progress",
+        vendorCount: data.vendorCount || 0,
+        deliveryDate: new Date(
+          data.expiryDate.seconds * 1000
+        ).toLocaleDateString(),
+      };
+    };
 
     const active = openSnapshot.docs.map(mapDocToDemand);
     const accepted = acceptedSnapshot.docs.map(mapDocToDemand);
