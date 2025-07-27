@@ -5,17 +5,26 @@ import { auth } from "firebase-admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
-async function getUserIdFromSession(): Promise<string | null> {
+export async function getUserIdFromSession(): Promise<string | null> {
   const sessionCookie = (await cookies()).get("session")?.value;
   if (!sessionCookie) return null;
   try {
+    // Initialize admin app if not already done
+    getAdminApp();
     const decodedClaims = await auth().verifySessionCookie(sessionCookie, true);
     return decodedClaims.uid;
   } catch (error) {
     console.error("Error verifying session cookie:", error);
+    (await cookies()).delete("session");
     return null;
   }
+}
+
+export async function signOutAction() {
+  (await cookies()).delete("session");
+  redirect("/login");
 }
 
 export async function joinGroupBuyAction(
@@ -89,33 +98,12 @@ export async function acceptGroupBuyAction(
     });
 
     revalidatePath("/supplier");
+    revalidatePath(`/supplier/demands/${groupBuyId}`);
     return { success: true, message: "Deal accepted successfully." };
   } catch (error: unknown) {
     return {
       success: false,
       message: (error as Error).message || "Failed to accept the deal.",
-    };
-  }
-}
-
-export async function updateGroupBuyStatusAction(
-  groupBuyId: string,
-  newStatus: string
-) {
-  const firestore = getAdminApp().firestore();
-  const groupBuyRef = firestore.collection("groupBuys").doc(groupBuyId);
-
-  try {
-    await groupBuyRef.update({
-      status: newStatus,
-    });
-    revalidatePath("/supplier");
-    revalidatePath("/orders");
-    return { success: true, message: `Status updated to ${newStatus}.` };
-  } catch (error) {
-    return {
-      success: false,
-      message: "Failed to update status: " + (error as Error).message,
     };
   }
 }
