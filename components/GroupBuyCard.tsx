@@ -74,102 +74,103 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
   };
 
   return (
-    <Link href={`/deals/${buy.id}`} className="block h-full">
-      <Card className="flex flex-col">
-        <CardHeader>
-          <CardTitle>{buy.productName}</CardTitle>
+    <Card className="flex flex-col">
+      <CardHeader>
+        {" "}
+        <Link href={`/deals/${buy.id}`} className="block h-full">
+          <CardTitle className="hover:underline">{buy.productName}</CardTitle>
           <CardDescription>
             High-quality produce, sourced directly.
           </CardDescription>
-        </CardHeader>
-        <CardContent className="flex-grow space-y-4">
-          <div className="text-3xl font-bold flex items-center">
-            <IndianRupee className="h-6 w-6 mr-1" />
-            {buy.pricePerKg}
-            <span className="text-lg font-normal text-muted-foreground ml-1">
-              / kg
+        </Link>
+      </CardHeader>
+      <CardContent className="flex-grow space-y-4">
+        <div className="text-3xl font-bold flex items-center">
+          <IndianRupee className="h-6 w-6 mr-1" />
+          {buy.pricePerKg}
+          <span className="text-lg font-normal text-muted-foreground ml-1">
+            / kg
+          </span>
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-1 text-sm">
+            <span className="font-medium">
+              {buy.currentQuantity}kg / {buy.targetQuantity}kg
+            </span>
+            <span className="text-primary font-semibold">
+              {progress.toFixed(0)}%
             </span>
           </div>
+          <Progress value={progress} />
+        </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1 text-sm">
-              <span className="font-medium">
-                {buy.currentQuantity}kg / {buy.targetQuantity}kg
-              </span>
-              <span className="text-primary font-semibold">
-                {progress.toFixed(0)}%
-              </span>
-            </div>
-            <Progress value={progress} />
+        <div className="text-sm text-muted-foreground space-y-2">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>Closes in ~{hoursLeft} hours</span>
           </div>
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            <span>Pickup at {buy.hubName}</span>
+          </div>
+        </div>
 
-          <div className="text-sm text-muted-foreground space-y-2">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              <span>Closes in ~{hoursLeft} hours</span>
+        <div className="pt-4 border-t">
+          {aiSummary ? (
+            <div className="text-sm text-muted-foreground space-y-1">
+              {aiSummary.split("\n").map((line, index) => (
+                <p key={index}>{line}</p>
+              ))}
+              <p className="text-xs text-right text-purple-600 italic mt-2">
+                Summarized by Saathi AI ✨
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span>Pickup at {buy.hubName}</span>
-            </div>
-          </div>
-
-          <div className="pt-4 border-t">
-            {aiSummary ? (
-              <div className="text-sm text-muted-foreground space-y-1">
-                {aiSummary.split("\n").map((line, index) => (
-                  <p key={index}>{line}</p>
-                ))}
-                <p className="text-xs text-right text-purple-600 italic mt-2">
-                  Summarized by Saathi AI ✨
-                </p>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={fetchAiSummary}
-                disabled={isSummaryLoading}
-              >
-                {isSummaryLoading ? "Saathi is thinking..." : "Get AI Summary"}
-              </Button>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter className="flex-col items-stretch gap-2">
-          <div className="flex items-center justify-center gap-2">
+          ) : (
             <Button
               variant="outline"
-              size="icon"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              size="sm"
+              className="w-full"
+              onClick={fetchAiSummary}
+              disabled={isSummaryLoading}
             >
-              <Minus className="h-4 w-4" />
+              {isSummaryLoading ? "Saathi is thinking..." : "Get AI Summary"}
             </Button>
-            <Input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
-              className="w-20 text-center"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setQuantity((q) => q + 1)}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          <Button onClick={handleJoin} disabled={loading} className="w-full">
-            {loading ? "Joining..." : `Join Deal (${quantity}kg)`}
-          </Button>
-          {message && (
-            <p className="text-xs text-center text-muted-foreground mt-2">
-              {message}
-            </p>
           )}
-        </CardFooter>
-      </Card>
-    </Link>
+        </div>
+      </CardContent>
+      <CardFooter className="flex-col items-stretch gap-2">
+        <div className="flex items-center justify-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <Input
+            type="number"
+            value={quantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            className="w-20 text-center"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setQuantity((q) => q + 1)}
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+        </div>
+        <Button onClick={handleJoin} disabled={loading} className="w-full">
+          {loading ? "Joining..." : `Join Deal (${quantity}kg)`}
+        </Button>
+        {message && (
+          <p className="text-xs text-center text-muted-foreground mt-2">
+            {message}
+          </p>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
