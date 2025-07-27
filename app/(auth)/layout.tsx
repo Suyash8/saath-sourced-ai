@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/AuthProvider";
 
 export default function AuthLayout({
@@ -11,13 +11,14 @@ export default function AuthLayout({
 }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
-  // Redirect to dashboard if user is already logged in
+  // Redirect to dashboard if user is already logged in, but allow onboarding
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && user && pathname !== "/onboarding") {
       router.push("/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
   // Show loading or nothing while checking auth status
   if (loading) {
@@ -28,8 +29,8 @@ export default function AuthLayout({
     );
   }
 
-  // Don't render auth pages if user is logged in
-  if (user) {
+  // Don't render auth pages if user is logged in (except onboarding)
+  if (user && pathname !== "/onboarding") {
     return null;
   }
 

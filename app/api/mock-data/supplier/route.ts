@@ -3,6 +3,7 @@ import { getAdminApp } from "@/firebase/adminConfig";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getUserIdFromSession } from "@/app/actions";
 import { Timestamp } from "firebase-admin/firestore";
+import { supplyTypes } from "@/data/supplyTypes";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
@@ -18,12 +19,16 @@ export async function POST(request: NextRequest) {
       generationConfig: {
         responseMimeType: "application/json",
       },
-      systemInstruction: `Generate realistic mock supplier demand data for Indian street food vendors. Return a JSON array of 6-10 supplier demands with the following structure:
+      systemInstruction: `Generate realistic mock supplier demand data for Indian street food vendors. You MUST only use products from this predefined list: ${supplyTypes
+        .map((s) => `${s.name} (${s.unit})`)
+        .join(
+          ", "
+        )}. Return a JSON array of 6-10 supplier demands with the following structure:
       {
         "demands": [
           {
-            "productName": "string (Indian ingredients like onions, tomatoes, potatoes, spices, etc.)",
-            "quantity": "number (100-1000 kg)",
+            "productName": "string (MUST be exactly one of the predefined supply names)",
+            "quantity": "number (100-1000 based on unit type)",
             "pricePerKg": "number (realistic wholesale prices in INR)",
             "location": "string (Indian city/area names)",
             "supplierName": "string (realistic Indian supplier names)",
@@ -32,11 +37,12 @@ export async function POST(request: NextRequest) {
             "status": "string (open, in_progress, fulfilled)",
             "contactInfo": "string (phone number format +91-XXXXXXXXXX)",
             "deliveryDate": "string (future dates within 14 days)",
-            "minimumOrder": "number (10-100 kg)"
+            "minimumOrder": "number (10-100 based on unit type)",
+            "unit": "string (MUST match the unit from predefined list)"
           }
         ]
       }
-      Make the data realistic for Indian agricultural suppliers and street food vendors.`,
+      IMPORTANT: Only use product names and units from the predefined list. Make the data realistic for Indian agricultural suppliers and street food vendors.`,
     });
 
     const result = await model.generateContent(
@@ -63,6 +69,7 @@ export async function POST(request: NextRequest) {
         status: demand.status,
         contactInfo: demand.contactInfo,
         minimumOrder: demand.minimumOrder,
+        unit: demand.unit,
         deliveryDate: Timestamp.fromDate(deliveryDate),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),

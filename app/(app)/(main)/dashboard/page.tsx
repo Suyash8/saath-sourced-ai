@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { IconButton } from "@/components/IconButton";
 import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
+import { RoleBasedDashboardStats } from "@/components/RoleBasedDashboardStats";
 import { Bell, Package, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp, DocumentData } from "firebase-admin/firestore";
@@ -101,7 +102,7 @@ async function getUnreadNotificationCount(userId: string): Promise<number> {
 export default async function Home() {
   const userId = await getUserIdFromSession();
   const userData = await getUserData(userId);
-  const userName = userData?.name || "User";
+  const userName = userData?.firstName || userData?.name || "User";
   const groupBuys = await getGroupBuys();
   const notificationCount = userId
     ? await getUnreadNotificationCount(userId)
@@ -137,7 +138,13 @@ export default async function Home() {
         </Header>
       </div>
 
-      <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+        {/* Role-based Dashboard Stats */}
+        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
+          <RoleBasedDashboardStats />
+        </div>
+
+        {/* Group Buying Deals */}
         <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
           <h2 className="text-xl font-bold mb-4 animate-in fade-in-0 slide-in-from-left-4 duration-500 delay-200">
             Top Deals for You

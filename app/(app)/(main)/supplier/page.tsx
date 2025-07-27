@@ -1,75 +1,84 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
-import { User, Package } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { User, Package, Eye, Lock } from "lucide-react";
 import Link from "next/link";
-import { getAdminApp } from "@/firebase/adminConfig";
+import { Button } from "@/components/ui/button";
 import { SupplierDemandCard, Demand } from "@/components/SupplierDemandCard";
-import type { QueryDocumentSnapshot } from "firebase-admin/firestore";
 
-async function getSupplierDemands(): Promise<{
-  active: Demand[];
-  accepted: Demand[];
-}> {
-  try {
-    const firestore = getAdminApp().firestore();
-    const openSnapshot = await firestore
-      .collection("groupBuys")
-      .where("status", "==", "open")
-      .get();
-    const acceptedSnapshot = await firestore
-      .collection("groupBuys")
-      .where("status", "==", "processing")
-      .get();
+export default function SupplierDashboardPage() {
+  const { loading, canInteract } = useUserRole();
+  const [demands, setDemands] = useState<{
+    active: Demand[];
+    accepted: Demand[];
+  }>({
+    active: [],
+    accepted: [],
+  });
+  const [isLoadingDemands, setIsLoadingDemands] = useState(true);
 
-    const mapDocToDemand = (doc: QueryDocumentSnapshot): Demand => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        productName: data.productName,
-        currentQuantity: data.currentQuantity,
-        hubName: data.hubName,
-        status: data.status === "open" ? "new" : "in-progress",
-        vendorCount: data.vendorCount || 0,
-        deliveryDate: new Date(
-          data.expiryDate.seconds * 1000
-        ).toLocaleDateString(),
-      };
+  useEffect(() => {
+    const fetchDemands = async () => {
+      try {
+        const response = await fetch("/api/supplier/demands");
+        if (response.ok) {
+          const data = await response.json();
+          setDemands(data);
+        }
+      } catch (error) {
+        console.error("Error fetching demands:", error);
+      } finally {
+        setIsLoadingDemands(false);
+      }
     };
 
-    const active = openSnapshot.docs.map(mapDocToDemand);
-    const accepted = acceptedSnapshot.docs.map(mapDocToDemand);
+    fetchDemands();
+  }, []);
 
-    return { active, accepted };
-  } catch (error) {
-    console.error("Error fetching demands:", error);
-    return { active: [], accepted: [] };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
-}
 
-export default async function SupplierDashboardPage() {
-  const { active, accepted } = await getSupplierDemands();
+  const renderContent = () => {
+    if (!canInteract("supplier")) {
+      return (
+        <div className="text-center p-8">
+          <div className="bg-muted/50 p-6 rounded-lg max-w-md mx-auto">
+            <Eye className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">View Only Mode</h3>
+            <p className="text-muted-foreground mb-4">
+              You&apos;re viewing the supplier dashboard. To interact with
+              demands, you need supplier access.
+            </p>
+            <Button asChild variant="outline">
+              <Link href="/profile">
+                <Lock className="h-4 w-4 mr-2" />
+                Update Profile
+              </Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Header
-        title="Supplier Dashboard"
-        subtitle="Manage aggregated demand"
-        backHref="/dashboard"
-      >
-        <Link href="/profile" aria-label="Profile">
-          <User className="h-5 w-5 md:h-6 md:w-6" />
-        </Link>
-      </Header>
-      <main className="p-4 space-y-6 pb-24 container mx-auto">
+    return (
+      <>
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Active Demand</h2>
-          {active.length > 0 ? (
+          {demands.active.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {active.map((demand) => (
+              {demands.active.map((demand) => (
                 <SupplierDemandCard key={demand.id} demand={demand} />
               ))}
             </div>
-          ) : active.length === 0 && accepted.length === 0 ? (
+          ) : demands.active.length === 0 && demands.accepted.length === 0 ? (
             <div className="text-center p-8 border-2 border-dashed rounded-lg">
               <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No supplier demands</h3>
@@ -89,9 +98,9 @@ export default async function SupplierDashboardPage() {
         </section>
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Accepted Demand</h2>
-          {accepted.length > 0 ? (
+          {demands.accepted.length > 0 ? (
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-              {accepted.map((demand) => (
+              {demands.accepted.map((demand) => (
                 <SupplierDemandCard key={demand.id} demand={demand} />
               ))}
             </div>
@@ -101,6 +110,33 @@ export default async function SupplierDashboardPage() {
             </p>
           )}
         </section>
+      </>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header
+        title="Supplier Dashboard"
+        subtitle={
+          canInteract("supplier")
+            ? "Manage aggregated demand"
+            : "View supplier demands (Read-only)"
+        }
+        backHref="/dashboard"
+      >
+        <Link href="/profile" aria-label="Profile">
+          <User className="h-5 w-5 md:h-6 md:w-6" />
+        </Link>
+      </Header>
+      <main className="p-4 space-y-6 pb-24 container mx-auto">
+        {isLoadingDemands ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          </div>
+        ) : (
+          renderContent()
+        )}
       </main>
     </div>
   );
