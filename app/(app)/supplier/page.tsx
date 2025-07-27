@@ -1,4 +1,4 @@
-import { Header } from "@/components/layout/Header";
+import { Header } from "@/components/Header";
 import { User } from "lucide-react";
 import Link from "next/link";
 

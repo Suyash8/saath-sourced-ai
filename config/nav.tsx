@@ -1,7 +1,6 @@
 import { Home, Package, TrendingUp } from "lucide-react";
-import { NavItem } from "@/components/layout/BottomNav"; // Import the type
+import { NavItem } from "@/components/BottomNav";
 
-// Placeholder for icons you haven't chosen yet
 const PlaceholderIcon = () => (
   <div className="h-6 w-6 bg-muted rounded-md"></div>
 );

@@ -1,8 +1,8 @@
-import { Header, IconButton } from "@/components/layout/Header";
+import { Header, IconButton } from "@/components/Header";
 import { Bell, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp } from "firebase-admin/firestore";
-import { GroupBuyCard } from "@/components/layout/GroupBuyCard";
+import { GroupBuyCard } from "@/components/GroupBuyCard";
 
 interface FirestoreGroupBuy {
   id: string;
