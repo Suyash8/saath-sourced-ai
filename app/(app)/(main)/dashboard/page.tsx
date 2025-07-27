@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { IconButton } from "@/components/IconButton";
-import { Bell, User } from "lucide-react";
+import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
+import { Bell, Package, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp, DocumentData } from "firebase-admin/firestore";
 import { GroupBuyCard } from "@/components/GroupBuyCard";
@@ -63,7 +64,12 @@ async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
       const data = doc.data() as Omit<FirestoreGroupBuy, "id">;
       return {
         id: doc.id,
-        ...data,
+        productName: data.productName,
+        pricePerKg: data.pricePerKg,
+        targetQuantity: data.targetQuantity,
+        currentQuantity: data.currentQuantity,
+        status: data.status,
+        hubName: data.hubName,
         expiryDate: data.expiryDate.toDate().toISOString(),
       };
     });
@@ -156,14 +162,15 @@ export default async function Home() {
             </div>
           ) : (
             <div className="text-center p-8 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500 delay-300 hover:border-primary/50 transition-colors">
-              <div className="animate-pulse">
-                <p className="text-muted-foreground">
-                  No active deals found right now.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Check back soon!
-                </p>
-              </div>
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No deals available</h3>
+              <p className="text-muted-foreground mb-6">
+                Generate some sample deals to get started
+              </p>
+              <GenerateMockDataButton
+                endpoint="/api/mock-data/deals"
+                label="Generate Sample Deals"
+              />
             </div>
           )}
         </div>

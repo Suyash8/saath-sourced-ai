@@ -1,10 +1,12 @@
 import { Header } from "@/components/Header";
 import { StatusBadge, OrderStatus } from "@/components/StatusBadge";
+import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
 import { getAdminApp } from "@/firebase/adminConfig";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { getUserIdFromSession } from "@/app/actions";
 import { redirect } from "next/navigation";
+import { Package } from "lucide-react";
 
 interface PopulatedOrder {
   id: string;
@@ -68,34 +70,50 @@ export default async function OrdersPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Active Orders</h2>
           {activeOrders.length > 0 ? (
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {activeOrders.map((order) => (
                 <Link
                   key={order.id}
                   href={`/track/${order.id}`}
                   className="block"
                 >
-                  <Card className="p-4 hover:bg-muted/50 transition-colors">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-medium">{order.productName}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {order.quantity}kg • ₹{order.total} total
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Order #{order.id.substring(0, 7)}
-                        </p>
+                  <Card className="p-4 hover:bg-muted/50 transition-all duration-200 hover:scale-[1.02] hover:shadow-md">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium truncate">
+                            {order.productName}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {order.quantity}kg • ₹{order.total}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            #{order.id.substring(0, 7)}
+                          </p>
+                        </div>
+                        <StatusBadge status={order.status} />
                       </div>
-                      <StatusBadge status={order.status} />
-                    </div>
-                    <div className="flex justify-end">
-                      <span className="text-primary text-sm font-medium">
-                        Track Order →
-                      </span>
+                      <div className="flex justify-end">
+                        <span className="text-primary text-sm font-medium">
+                          Track Order →
+                        </span>
+                      </div>
                     </div>
                   </Card>
                 </Link>
               ))}
+            </div>
+          ) : allOrders.length === 0 ? (
+            <div className="text-center p-8 border-2 border-dashed rounded-lg">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No orders yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Generate some sample orders to get started
+              </p>
+              <GenerateMockDataButton
+                endpoint="/api/mock-data/orders"
+                label="Generate Sample Orders"
+              />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground pl-2">
@@ -106,22 +124,29 @@ export default async function OrdersPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Past Orders</h2>
           {pastOrders.length > 0 ? (
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {pastOrders.map((order) => (
-                <Card key={order.id} className="p-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="font-medium">{order.productName}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {order.quantity}kg • ₹{order.total} total
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Order #{order.id.substring(0, 7)}
-                      </p>
+                <Card
+                  key={order.id}
+                  className="p-4 hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium truncate">
+                          {order.productName}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {order.quantity}kg • ₹{order.total}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          #{order.id.substring(0, 7)}
+                        </p>
+                      </div>
+                      <StatusBadge status={order.status} />
                     </div>
                     <div className="text-right">
-                      <StatusBadge status={order.status} />
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground">
                         {new Date(
                           order.createdAt.seconds * 1000
                         ).toLocaleDateString()}

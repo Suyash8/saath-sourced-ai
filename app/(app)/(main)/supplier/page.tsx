@@ -1,5 +1,6 @@
 import { Header } from "@/components/Header";
-import { User } from "lucide-react";
+import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
+import { User, Package } from "lucide-react";
 import Link from "next/link";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { SupplierDemandCard, Demand } from "@/components/SupplierDemandCard";
@@ -63,10 +64,22 @@ export default async function SupplierDashboardPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Active Demand</h2>
           {active.length > 0 ? (
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {active.map((demand) => (
                 <SupplierDemandCard key={demand.id} demand={demand} />
               ))}
+            </div>
+          ) : active.length === 0 && accepted.length === 0 ? (
+            <div className="text-center p-8 border-2 border-dashed rounded-lg">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No supplier demands</h3>
+              <p className="text-muted-foreground mb-6">
+                Generate some sample supplier demands to get started
+              </p>
+              <GenerateMockDataButton
+                endpoint="/api/mock-data/supplier"
+                label="Generate Sample Demands"
+              />
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
@@ -77,7 +90,7 @@ export default async function SupplierDashboardPage() {
         <section className="space-y-4">
           <h2 className="text-lg font-semibold">Accepted Demand</h2>
           {accepted.length > 0 ? (
-            <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
               {accepted.map((demand) => (
                 <SupplierDemandCard key={demand.id} demand={demand} />
               ))}
