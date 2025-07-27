@@ -1,4 +1,5 @@
-import { Header, IconButton } from "@/components/Header";
+import { Header } from "@/components/Header";
+import { IconButton } from "@/components/IconButton";
 import { Bell, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp, DocumentData } from "firebase-admin/firestore";
@@ -74,11 +75,31 @@ async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
   }
 }
 
+async function getUnreadNotificationCount(userId: string): Promise<number> {
+  try {
+    const notificationsRef = getAdminApp()
+      .firestore()
+      .collection("users")
+      .doc(userId)
+      .collection("notifications")
+      .where("read", "==", false);
+
+    const snapshot = await notificationsRef.count().get();
+    return snapshot.data().count;
+  } catch (error) {
+    console.error("Error fetching notification count:", error);
+    return 0;
+  }
+}
+
 export default async function Home() {
   const userId = await getUserIdFromSession();
   const userData = await getUserData(userId);
   const userName = userData?.name || "User";
   const groupBuys = await getGroupBuys();
+  const notificationCount = userId
+    ? await getUnreadNotificationCount(userId)
+    : 0;
 
   return (
     <div>
@@ -95,6 +116,7 @@ export default async function Home() {
           href="/notifications"
           icon={Bell}
           className="!text-muted-foreground hover:!text-foreground"
+          badgeCount={notificationCount}
         />
         <IconButton
           href="/profile"
