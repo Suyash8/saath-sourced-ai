@@ -79,11 +79,7 @@ export default async function SupplierDashboardPage() {
           {accepted.length > 0 ? (
             <div className="space-y-3">
               {accepted.map((demand) => (
-                <SupplierDemandCard
-                  key={demand.id}
-                  demand={demand}
-                  isAccepted
-                />
+                <SupplierDemandCard key={demand.id} demand={demand} />
               ))}
             </div>
           ) : (

@@ -97,3 +97,22 @@ export async function acceptGroupBuyAction(
     };
   }
 }
+
+export async function updateGroupBuyStatusAction(
+  groupBuyId: string,
+  newStatus: string
+) {
+  const firestore = getAdminApp().firestore();
+  const groupBuyRef = firestore.collection("groupBuys").doc(groupBuyId);
+
+  try {
+    await groupBuyRef.update({
+      status: newStatus,
+    });
+    revalidatePath("/supplier");
+    revalidatePath("/orders");
+    return { success: true, message: `Status updated to ${newStatus}.` };
+  } catch (error) {
+    return { success: false, message: "Failed to update status." };
+  }
+}
