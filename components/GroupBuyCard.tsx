@@ -119,6 +119,9 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
               {aiSummary.split("\n").map((line, index) => (
                 <p key={index}>{line}</p>
               ))}
+              <p className="text-xs text-right text-purple-600 italic mt-2">
+                Summarized by Saathi AI ✨
+              </p>
             </div>
           ) : (
             <Button
