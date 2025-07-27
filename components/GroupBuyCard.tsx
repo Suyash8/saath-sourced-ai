@@ -24,6 +24,8 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
   const [quantity, setQuantity] = useState(10);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   const progress = (buy.currentQuantity / buy.targetQuantity) * 100;
   const expiry = new Date(buy.expiryDate);
@@ -32,6 +34,32 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
     0,
     Math.round((expiry.getTime() - now.getTime()) / (1000 * 60 * 60))
   );
+
+  const fetchAiSummary = async () => {
+    if (aiSummary) return;
+    setIsSummaryLoading(true);
+    try {
+      const response = await fetch("/api/summarize-deal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: buy.productName,
+          pricePerKg: buy.pricePerKg,
+          hubName: buy.hubName,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch summary");
+      }
+      const data = await response.json();
+      setAiSummary(data.summary);
+    } catch (error) {
+      console.error(error);
+      setAiSummary("Could not load AI summary."); // Provide fallback message
+    } finally {
+      setIsSummaryLoading(false);
+    }
+  };
 
   const handleJoin = async () => {
     setLoading(true);
@@ -83,6 +111,26 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
             <MapPin className="h-4 w-4" />
             <span>Pickup at {buy.hubName}</span>
           </div>
+        </div>
+
+        <div className="pt-4 border-t">
+          {aiSummary ? (
+            <div className="text-sm text-muted-foreground space-y-1">
+              {aiSummary.split("\n").map((line, index) => (
+                <p key={index}>{line}</p>
+              ))}
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={fetchAiSummary}
+              disabled={isSummaryLoading}
+            >
+              {isSummaryLoading ? "Saathi is thinking..." : "Get AI Summary"}
+            </Button>
+          )}
         </div>
       </CardContent>
       <CardFooter className="flex-col items-stretch gap-2">
