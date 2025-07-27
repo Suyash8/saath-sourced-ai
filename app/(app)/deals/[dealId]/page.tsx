@@ -48,9 +48,10 @@ async function getDealDetails(dealId: string) {
 export default async function DealDetailsPage({
   params,
 }: {
-  params: { dealId: string };
+  params: Promise<{ dealId: string }>;
 }) {
-  const deal = await getDealDetails(params.dealId);
+  const { dealId } = await params;
+  const deal = await getDealDetails(dealId);
 
   if (!deal) {
     notFound();

@@ -4,7 +4,7 @@ import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Package, Truck, MapPin, Navigation } from "lucide-react";
+import { Check, Package, Truck, Navigation } from "lucide-react";
 import Image from "next/image";
 
 async function getOrderTrackingDetails(orderId: string) {
@@ -34,9 +34,10 @@ async function getOrderTrackingDetails(orderId: string) {
 export default async function TrackOrderPage({
   params,
 }: {
-  params: { orderId: string };
+  params: Promise<{ orderId: string }>;
 }) {
-  const details = await getOrderTrackingDetails(params.orderId);
+  const { orderId } = await params;
+  const details = await getOrderTrackingDetails(orderId);
   if (!details || !details.order) {
     notFound();
   }
@@ -93,7 +94,7 @@ export default async function TrackOrderPage({
     <div className="min-h-screen bg-background">
       <Header
         title="Track Order"
-        subtitle={`Order #${params.orderId.substring(0, 7)}`}
+        subtitle={`Order #${orderId.substring(0, 7)}`}
         backHref="/orders"
       />
       <main className="p-4 space-y-6 pb-24 container mx-auto">

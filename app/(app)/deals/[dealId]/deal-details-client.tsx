@@ -77,7 +77,7 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
             </div>
           </div>
           <div className="bg-card border border-border rounded-lg p-4 space-y-4">
-            <h3 className="font-medium">Saathi's Quality Check</h3>
+            <h3 className="font-medium">Saathi&apos;s Quality Check</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <Droplets className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />

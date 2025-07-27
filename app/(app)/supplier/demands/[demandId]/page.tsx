@@ -32,6 +32,7 @@ async function getDemandDetails(demandId: string): Promise<Demand | null> {
     if (!demandDoc.exists) return null;
     return { id: demandDoc.id, ...demandDoc.data() } as Demand;
   } catch (error) {
+    console.error("Error fetching demand details:", error);
     return null;
   }
 }
@@ -39,9 +40,10 @@ async function getDemandDetails(demandId: string): Promise<Demand | null> {
 export default async function SupplierDemandDetailPage({
   params,
 }: {
-  params: { demandId: string };
+  params: Promise<{ demandId: string }>;
 }) {
-  const demand = await getDemandDetails(params.demandId);
+  const { demandId } = await params;
+  const demand = await getDemandDetails(demandId);
 
   if (!demand) {
     notFound();

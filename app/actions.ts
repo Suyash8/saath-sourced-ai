@@ -113,6 +113,9 @@ export async function updateGroupBuyStatusAction(
     revalidatePath("/orders");
     return { success: true, message: `Status updated to ${newStatus}.` };
   } catch (error) {
-    return { success: false, message: "Failed to update status." };
+    return {
+      success: false,
+      message: "Failed to update status: " + (error as Error).message,
+    };
   }
 }
