@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GroupBuyCard } from "@/components/GroupBuyCard";
 import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
@@ -27,32 +27,6 @@ export function DashboardClient({
     initialDeals.some((deal) => deal.aiScore !== undefined)
   );
 
-  // Auto-sort deals by AI scores when they exist
-  useEffect(() => {
-    const dealsWithScores = deals.filter(deal => deal.aiScore !== undefined);
-    if (dealsWithScores.length > 0) {
-      const sortedDeals = [...deals].sort((a, b) => {
-        // Prioritize deals with scores, then sort by score (highest first)
-        if (a.aiScore !== undefined && b.aiScore !== undefined) {
-          return b.aiScore - a.aiScore;
-        }
-        if (a.aiScore !== undefined && b.aiScore === undefined) {
-          return -1; // a comes first
-        }
-        if (a.aiScore === undefined && b.aiScore !== undefined) {
-          return 1; // b comes first
-        }
-        return 0; // maintain original order for deals without scores
-      });
-      
-      // Only update if the order actually changed
-      const orderChanged = sortedDeals.some((deal, index) => deal.id !== deals[index]?.id);
-      if (orderChanged) {
-        setDeals(sortedDeals);
-      }
-    }
-  }, [deals, hasAIScores]);
-
   const handleAIScore = async () => {
     if (!userId) return;
 
@@ -64,16 +38,18 @@ export function DashboardClient({
         body: JSON.stringify({
           deals: deals,
           userProfile: await getUserProfile(userId),
+          userId: userId,
         }),
       });
 
       if (response.ok) {
         const { scoredDeals } = await response.json();
-        setDeals(scoredDeals);
+        // Sort by AI score (highest first) before setting state
+        const sortedDeals = scoredDeals.sort(
+          (a: ScoredDeal, b: ScoredDeal) => (b.aiScore || 0) - (a.aiScore || 0)
+        );
+        setDeals(sortedDeals);
         setHasAIScores(true);
-
-        // Store scores in database
-        await storeAIScores(scoredDeals);
       }
     } catch (error) {
       console.error("Error scoring deals:", error);
@@ -88,18 +64,6 @@ export function DashboardClient({
       return await response.json();
     }
     return null;
-  };
-
-  const storeAIScores = async (scoredDeals: ScoredDeal[]) => {
-    try {
-      await fetch("/api/ai/store-scores", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ scoredDeals }),
-      });
-    } catch (error) {
-      console.error("Error storing AI scores:", error);
-    }
   };
 
   return (
