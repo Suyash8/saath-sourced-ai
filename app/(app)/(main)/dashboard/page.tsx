@@ -48,7 +48,9 @@ async function getUserData(
   }
 }
 
-async function getGroupBuysWithStoredScores(): Promise<SerializableGroupBuy[]> {
+async function getGroupBuysWithStoredScores(
+  userId: string | null
+): Promise<SerializableGroupBuy[]> {
   try {
     const firestore = getAdminApp().firestore();
     const snapshot = await firestore
@@ -58,11 +60,8 @@ async function getGroupBuysWithStoredScores(): Promise<SerializableGroupBuy[]> {
       .limit(20)
       .get();
 
-    return snapshot.docs.map((doc) => {
-      const data = doc.data() as FirestoreGroupBuy & {
-        aiScore?: number;
-        aiReasoning?: string;
-      };
+    const deals = snapshot.docs.map((doc) => {
+      const data = doc.data() as FirestoreGroupBuy;
       return {
         id: doc.id,
         productName: data.productName,
@@ -72,10 +71,44 @@ async function getGroupBuysWithStoredScores(): Promise<SerializableGroupBuy[]> {
         status: data.status,
         expiryDate: data.expiryDate.toDate().toISOString(),
         hubName: data.hubName,
-        aiScore: data.aiScore,
-        aiReasoning: data.aiReasoning,
       };
     });
+
+    // Load AI scores from user profile if user is authenticated
+    if (userId) {
+      try {
+        const userDoc = await firestore.collection("users").doc(userId).get();
+        const userData = userDoc.data();
+        const userScores = userData?.aiScores?.deals || {};
+
+        return deals
+          .map((deal) => {
+            const scoreData = userScores[deal.id];
+            return {
+              ...deal,
+              aiScore: scoreData?.score,
+              aiReasoning: scoreData?.reasoning,
+            };
+          })
+          .sort((a, b) => {
+            // Sort by AI score if available (highest first)
+            if (a.aiScore !== undefined && b.aiScore !== undefined) {
+              return b.aiScore - a.aiScore;
+            }
+            if (a.aiScore !== undefined && b.aiScore === undefined) {
+              return -1;
+            }
+            if (a.aiScore === undefined && b.aiScore !== undefined) {
+              return 1;
+            }
+            return 0; // maintain original order
+          });
+      } catch (error) {
+        console.error("Error loading user AI scores:", error);
+      }
+    }
+
+    return deals;
   } catch (error) {
     console.error("Error fetching group buys:", error);
     return [];
@@ -103,7 +136,7 @@ export default async function Home() {
   const userId = await getUserIdFromSession();
   const userData = await getUserData(userId);
   const userName = userData?.firstName || userData?.name || "User";
-  const groupBuys = await getGroupBuysWithStoredScores();
+  const groupBuys = await getGroupBuysWithStoredScores(userId);
   const notificationCount = userId
     ? await getUnreadNotificationCount(userId)
     : 0;
