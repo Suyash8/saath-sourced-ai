@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     // If no deals exist, generate deals first
     if (dealsSnapshot.empty) {
       const dealsModel = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         generationConfig: {
           responseMimeType: "application/json",
         },
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Now generate orders
     const ordersModel = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
       },

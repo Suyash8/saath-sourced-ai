@@ -7,7 +7,7 @@ const firestore = getAdminApp().firestore();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+  model: "gemini-2.5-flash",
   systemInstruction: `You are "Saathi AI", a helpful and friendly assistant for Indian street food vendors. You have access to real-time data about group buy deals and the user's order history. Your answers should be concise, helpful, and directly answer the user's question based on the provided data. If you don't have the information, say so. Do not invent details. Current date is ${new Date().toLocaleDateString(
     "en-IN"
   )}.`,

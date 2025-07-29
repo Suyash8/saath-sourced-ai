@@ -44,23 +44,23 @@ export function VendorQuestionnaire({
     onProfileChange({ ...profile, [field]: value });
   };
 
-  // Get AI suggestions when business type and location are filled
+  // Get AI suggestions when business description is filled
   useEffect(() => {
     const getAiSuggestions = async () => {
       if (
+        profile.businessDescription &&
         profile.businessType &&
-        profile.location &&
-        profile.businessType.length > 3
+        profile.businessDescription.length > 10
       ) {
         setLoadingAi(true);
         try {
-          const response = await fetch("/api/ai/questionnaire-suggestions", {
+          const response = await fetch("/api/ai/supply-suggestions", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              role: "vendor",
+              businessDescription: profile.businessDescription,
               businessType: profile.businessType,
-              location: profile.location,
+              isSupplier: false,
             }),
           });
 
@@ -78,9 +78,9 @@ export function VendorQuestionnaire({
       }
     };
 
-    const timeoutId = setTimeout(getAiSuggestions, 1000); // Debounce
+    const timeoutId = setTimeout(getAiSuggestions, 1500); // Debounce
     return () => clearTimeout(timeoutId);
-  }, [profile.businessType, profile.location]);
+  }, [profile.businessDescription, profile.businessType]);
 
   const addSupply = (supplyId: string) => {
     if (!profile.suppliesNeeded.includes(supplyId)) {
@@ -147,10 +147,10 @@ export function VendorQuestionnaire({
 
           {/* AI Suggestions */}
           {(aiSuggestions.length > 0 || loadingAi) && (
-            <Card className="bg-blue-50 border-blue-200">
+            <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-blue-600" />
+                  <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   AI Recommendations for your business
                   {loadingAi && <Loader2 className="h-4 w-4 animate-spin" />}
                 </CardTitle>
@@ -158,20 +158,51 @@ export function VendorQuestionnaire({
               <CardContent className="pt-0">
                 {loadingAi ? (
                   <p className="text-sm text-muted-foreground">
-                    Analyzing your business type and location...
+                    Analyzing your business description...
                   </p>
                 ) : (
-                  <ul className="space-y-2">
-                    {aiSuggestions.map((suggestion, index) => (
-                      <li
-                        key={index}
-                        className="text-sm text-blue-700 flex items-start gap-2"
-                      >
-                        <span className="text-blue-500 mt-1">•</span>
-                        {suggestion}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="space-y-3">
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Based on your business description, you might need these
+                      supplies:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {aiSuggestions.map((suggestion, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs border-blue-300 dark:border-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+                          onClick={() => addSupply(suggestion)}
+                          disabled={profile.suppliesNeeded.includes(suggestion)}
+                        >
+                          {profile.suppliesNeeded.includes(suggestion)
+                            ? "✓ Added"
+                            : `+ ${suggestion}`}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                      onClick={() => {
+                        const newSupplies = aiSuggestions.filter(
+                          (suggestion) =>
+                            !profile.suppliesNeeded.includes(suggestion)
+                        );
+                        updateProfile("suppliesNeeded", [
+                          ...profile.suppliesNeeded,
+                          ...newSupplies,
+                        ]);
+                      }}
+                      disabled={aiSuggestions.every((suggestion) =>
+                        profile.suppliesNeeded.includes(suggestion)
+                      )}
+                    >
+                      Add All Suggestions
+                    </Button>
+                  </div>
                 )}
               </CardContent>
             </Card>

@@ -81,8 +81,10 @@ export default function AssistantPage() {
               </div>
             )}
             <div
-              className={`prose prose-sm max-w-lg rounded-lg px-4 py-2 ${
-                msg.role === "user" ? "bg-muted" : "bg-card border"
+              className={`prose prose-sm dark:prose-invert max-w-lg rounded-lg px-4 py-2 ${
+                msg.role === "user"
+                  ? "bg-muted text-foreground"
+                  : "bg-card border text-foreground"
               }`}
             >
               <Markdown>{msg.content}</Markdown>
@@ -99,7 +101,7 @@ export default function AssistantPage() {
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center animate-pulse">
               <BrainCircuit className="h-5 w-5" />
             </div>
-            <div className="rounded-lg px-4 py-2 bg-card border">
+            <div className="rounded-lg px-4 py-2 bg-card border text-foreground">
               <p className="text-sm animate-pulse">Saathi is thinking...</p>
             </div>
           </div>

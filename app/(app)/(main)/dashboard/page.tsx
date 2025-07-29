@@ -1,7 +1,6 @@
 import { Header } from "@/components/Header";
 import { IconButton } from "@/components/IconButton";
 import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
-import { RoleBasedDashboardStats } from "@/components/RoleBasedDashboardStats";
 import { Bell, Package, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp, DocumentData } from "firebase-admin/firestore";
@@ -51,18 +50,15 @@ async function getUserData(
 async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
   try {
     const firestore = getAdminApp().firestore();
-    const groupBuysRef = firestore.collection("groupBuys");
-    const snapshot = await groupBuysRef
+    const snapshot = await firestore
+      .collection("groupBuys")
       .where("status", "==", "open")
-      .where("expiryDate", ">", Timestamp.now())
+      .orderBy("createdAt", "desc")
+      .limit(20)
       .get();
 
-    if (snapshot.empty) {
-      return [];
-    }
-
-    const groupBuys: SerializableGroupBuy[] = snapshot.docs.map((doc) => {
-      const data = doc.data() as Omit<FirestoreGroupBuy, "id">;
+    return snapshot.docs.map((doc) => {
+      const data = doc.data() as FirestoreGroupBuy;
       return {
         id: doc.id,
         productName: data.productName,
@@ -70,15 +66,58 @@ async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
         targetQuantity: data.targetQuantity,
         currentQuantity: data.currentQuantity,
         status: data.status,
-        hubName: data.hubName,
         expiryDate: data.expiryDate.toDate().toISOString(),
+        hubName: data.hubName,
       };
     });
-
-    return groupBuys;
   } catch (error) {
     console.error("Error fetching group buys:", error);
     return [];
+  }
+}
+
+async function getAIScoredDeals(
+  userId: string | null
+): Promise<SerializableGroupBuy[]> {
+  try {
+    const groupBuys = await getGroupBuys();
+    if (!userId || groupBuys.length === 0) return groupBuys;
+
+    // Get user profile for AI scoring
+    const userDoc = await getAdminApp()
+      .firestore()
+      .collection("users")
+      .doc(userId)
+      .get();
+
+    if (!userDoc.exists) return groupBuys;
+
+    const userProfile = userDoc.data();
+
+    // Score deals with AI
+    const response = await fetch(
+      `${
+        process.env.NEXTAUTH_URL || "http://localhost:3000"
+      }/api/ai/score-deals`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deals: groupBuys,
+          userProfile,
+        }),
+      }
+    );
+
+    if (response.ok) {
+      const { scoredDeals } = await response.json();
+      return scoredDeals;
+    }
+
+    return groupBuys;
+  } catch (error) {
+    console.error("Error getting AI scored deals:", error);
+    return await getGroupBuys();
   }
 }
 
@@ -103,7 +142,7 @@ export default async function Home() {
   const userId = await getUserIdFromSession();
   const userData = await getUserData(userId);
   const userName = userData?.firstName || userData?.name || "User";
-  const groupBuys = await getGroupBuys();
+  const groupBuys = await getAIScoredDeals(userId);
   const notificationCount = userId
     ? await getUnreadNotificationCount(userId)
     : 0;
@@ -139,11 +178,6 @@ export default async function Home() {
       </div>
 
       <main className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-        {/* Role-based Dashboard Stats */}
-        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-          <RoleBasedDashboardStats />
-        </div>
-
         {/* Group Buying Deals */}
         <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
           <h2 className="text-xl font-bold mb-4 animate-in fade-in-0 slide-in-from-left-4 duration-500 delay-200">

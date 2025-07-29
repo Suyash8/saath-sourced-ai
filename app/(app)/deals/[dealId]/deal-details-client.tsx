@@ -36,7 +36,7 @@ interface Analysis {
 }
 
 const AILoadingState = () => (
-  <Card className="bg-muted/50 animate-pulse">
+  <Card className="bg-muted/30 dark:bg-muted/20 animate-pulse">
     <CardHeader>
       <CardTitle className="flex items-center gap-2">
         <BrainCircuit className="h-5 w-5 text-primary" />
@@ -44,18 +44,18 @@ const AILoadingState = () => (
       </CardTitle>
     </CardHeader>
     <CardContent className="space-y-3">
-      <div className="h-4 bg-muted rounded w-3/4"></div>
-      <div className="h-4 bg-muted rounded w-full"></div>
-      <div className="h-4 bg-muted rounded w-1/2"></div>
+      <div className="h-4 bg-muted dark:bg-muted/50 rounded w-3/4"></div>
+      <div className="h-4 bg-muted dark:bg-muted/50 rounded w-full"></div>
+      <div className="h-4 bg-muted dark:bg-muted/50 rounded w-1/2"></div>
     </CardContent>
   </Card>
 );
 
 const AIAnalysisCard = ({ analysis }: { analysis: Analysis }) => {
   const ratingColors = {
-    Excellent: "bg-green-100 text-green-800 border-green-200",
-    Good: "bg-blue-100 text-blue-800 border-blue-200",
-    Standard: "bg-slate-100 text-slate-800 border-slate-200",
+    Excellent: "bg-green-50 dark:bg-green-950/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800",
+    Good: "bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800",
+    Standard: "bg-slate-50 dark:bg-slate-950/20 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800",
   };
 
   return (
@@ -66,7 +66,7 @@ const AIAnalysisCard = ({ analysis }: { analysis: Analysis }) => {
             <BrainCircuit className="h-5 w-5" />
             Saathi Co-pilot Analysis
           </div>
-          <Badge className="border-none">{analysis.dealRating} Deal</Badge>
+          <Badge className="border-none bg-inherit">{analysis.dealRating} Deal</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
