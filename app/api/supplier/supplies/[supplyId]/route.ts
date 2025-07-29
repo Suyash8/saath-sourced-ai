@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { getUserIdFromSession } from "@/app/actions";
 import { Timestamp } from "firebase-admin/firestore";
+import { getDefaultSupplyImage } from "@/lib/supply-images";
 
 export async function PUT(
   req: NextRequest,
@@ -21,6 +22,8 @@ export async function PUT(
       minimumOrder,
       description,
       location,
+      imageUrl,
+      useDefaultImage,
     } = await req.json();
 
     const firestore = getAdminApp().firestore();
@@ -40,6 +43,11 @@ export async function PUT(
       );
     }
 
+    // Determine the image URL to use
+    const finalImageUrl = useDefaultImage || !imageUrl 
+      ? getDefaultSupplyImage(productName)
+      : imageUrl;
+
     const updateData = {
       productName,
       pricePerKg: Number(pricePerKg),
@@ -47,6 +55,7 @@ export async function PUT(
       minimumOrder: Number(minimumOrder),
       description: description || "",
       location,
+      imageUrl: finalImageUrl,
       updatedAt: Timestamp.now(),
     };
 
@@ -56,6 +65,7 @@ export async function PUT(
       id: supplyId,
       supplierId: userId,
       ...updateData,
+      imageUrl: finalImageUrl,
       isActive: supplyData.isActive,
       createdAt: supplyData.createdAt.toDate().toISOString(),
       updatedAt: updateData.updatedAt.toDate().toISOString(),

@@ -1,11 +1,10 @@
 import { Header } from "@/components/Header";
 import { IconButton } from "@/components/IconButton";
-import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
-import { Bell, Package, User } from "lucide-react";
+import { Bell, User } from "lucide-react";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { Timestamp, DocumentData } from "firebase-admin/firestore";
-import { GroupBuyCard } from "@/components/GroupBuyCard";
 import { getUserIdFromSession } from "@/app/actions";
+import { DashboardClient } from "./dashboard-client";
 
 interface FirestoreGroupBuy {
   id: string;
@@ -27,6 +26,8 @@ export interface SerializableGroupBuy {
   status: "open" | "closed" | "fulfilled";
   expiryDate: string;
   hubName: string;
+  aiScore?: number;
+  aiReasoning?: string;
 }
 
 async function getUserData(
@@ -47,7 +48,7 @@ async function getUserData(
   }
 }
 
-async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
+async function getGroupBuysWithStoredScores(): Promise<SerializableGroupBuy[]> {
   try {
     const firestore = getAdminApp().firestore();
     const snapshot = await firestore
@@ -58,7 +59,10 @@ async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
       .get();
 
     return snapshot.docs.map((doc) => {
-      const data = doc.data() as FirestoreGroupBuy;
+      const data = doc.data() as FirestoreGroupBuy & {
+        aiScore?: number;
+        aiReasoning?: string;
+      };
       return {
         id: doc.id,
         productName: data.productName,
@@ -68,56 +72,13 @@ async function getGroupBuys(): Promise<SerializableGroupBuy[]> {
         status: data.status,
         expiryDate: data.expiryDate.toDate().toISOString(),
         hubName: data.hubName,
+        aiScore: data.aiScore,
+        aiReasoning: data.aiReasoning,
       };
     });
   } catch (error) {
     console.error("Error fetching group buys:", error);
     return [];
-  }
-}
-
-async function getAIScoredDeals(
-  userId: string | null
-): Promise<SerializableGroupBuy[]> {
-  try {
-    const groupBuys = await getGroupBuys();
-    if (!userId || groupBuys.length === 0) return groupBuys;
-
-    // Get user profile for AI scoring
-    const userDoc = await getAdminApp()
-      .firestore()
-      .collection("users")
-      .doc(userId)
-      .get();
-
-    if (!userDoc.exists) return groupBuys;
-
-    const userProfile = userDoc.data();
-
-    // Score deals with AI
-    const response = await fetch(
-      `${
-        process.env.NEXTAUTH_URL || "http://localhost:3000"
-      }/api/ai/score-deals`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deals: groupBuys,
-          userProfile,
-        }),
-      }
-    );
-
-    if (response.ok) {
-      const { scoredDeals } = await response.json();
-      return scoredDeals;
-    }
-
-    return groupBuys;
-  } catch (error) {
-    console.error("Error getting AI scored deals:", error);
-    return await getGroupBuys();
   }
 }
 
@@ -142,7 +103,7 @@ export default async function Home() {
   const userId = await getUserIdFromSession();
   const userData = await getUserData(userId);
   const userName = userData?.firstName || userData?.name || "User";
-  const groupBuys = await getAIScoredDeals(userId);
+  const groupBuys = await getGroupBuysWithStoredScores();
   const notificationCount = userId
     ? await getUnreadNotificationCount(userId)
     : 0;
@@ -178,43 +139,7 @@ export default async function Home() {
       </div>
 
       <main className="container mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-        {/* Group Buying Deals */}
-        <div className="animate-in fade-in-0 slide-in-from-bottom-4 duration-700">
-          <h2 className="text-xl font-bold mb-4 animate-in fade-in-0 slide-in-from-left-4 duration-500 delay-200">
-            Top Deals for You
-          </h2>
-
-          {groupBuys.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 grid-flow-row-dense">
-              {groupBuys.map((buy, index) => (
-                <div
-                  key={buy.id}
-                  className="animate-in fade-in-0 slide-in-from-bottom-4 duration-500"
-                  style={{
-                    animationDelay: `${300 + index * 100}ms`,
-                    animationFillMode: "both",
-                  }}
-                >
-                  <div className="transform transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
-                    <GroupBuyCard buy={buy} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center p-8 border-2 border-dashed rounded-lg animate-in fade-in-0 zoom-in-95 duration-500 delay-300 hover:border-primary/50 transition-colors">
-              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-medium mb-2">No deals available</h3>
-              <p className="text-muted-foreground mb-6">
-                Generate some sample deals to get started
-              </p>
-              <GenerateMockDataButton
-                endpoint="/api/mock-data/deals"
-                label="Generate Sample Deals"
-              />
-            </div>
-          )}
-        </div>
+        <DashboardClient initialDeals={groupBuys} userId={userId} />
       </main>
     </div>
   );

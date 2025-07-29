@@ -31,6 +31,7 @@ interface SupplierSupply {
   minimumOrder: number;
   description: string;
   location: string;
+  imageUrl?: string;
   isActive: boolean;
   updatedAt: string;
 }
@@ -60,6 +61,8 @@ export default function SupplierDashboardPage() {
     minimumOrder: "",
     description: "",
     location: "",
+    imageUrl: "",
+    useDefaultImage: true,
   });
 
   useEffect(() => {
@@ -103,6 +106,8 @@ export default function SupplierDashboardPage() {
       minimumOrder: "",
       description: "",
       location: "",
+      imageUrl: "",
+      useDefaultImage: true,
     });
     setEditingSupply(null);
   };
@@ -187,6 +192,8 @@ export default function SupplierDashboardPage() {
       minimumOrder: supply.minimumOrder.toString(),
       description: supply.description,
       location: supply.location,
+      imageUrl: supply.imageUrl || "",
+      useDefaultImage: !supply.imageUrl,
     });
   };
 

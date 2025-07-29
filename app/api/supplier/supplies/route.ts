@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { getUserIdFromSession } from "@/app/actions";
 import { Timestamp } from "firebase-admin/firestore";
+import { getDefaultSupplyImage } from "@/lib/supply-images";
 
 export async function GET() {
   const userId = await getUserIdFromSession();
@@ -27,6 +28,7 @@ export async function GET() {
         minimumOrder: data.minimumOrder,
         description: data.description,
         location: data.location,
+        imageUrl: data.imageUrl,
         isActive: data.isActive,
         updatedAt: data.updatedAt.toDate().toISOString(),
       };
@@ -56,6 +58,8 @@ export async function POST(req: NextRequest) {
       minimumOrder,
       description,
       location,
+      imageUrl,
+      useDefaultImage,
     } = await req.json();
 
     if (
@@ -71,6 +75,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Determine the image URL to use
+    const finalImageUrl = useDefaultImage || !imageUrl 
+      ? getDefaultSupplyImage(productName)
+      : imageUrl;
+
     const firestore = getAdminApp().firestore();
     const supplyRef = firestore.collection("supplierSupplies").doc();
     const now = Timestamp.now();
@@ -83,6 +92,7 @@ export async function POST(req: NextRequest) {
       minimumOrder: Number(minimumOrder),
       description: description || "",
       location,
+      imageUrl: finalImageUrl,
       isActive: true,
       createdAt: now,
       updatedAt: now,
