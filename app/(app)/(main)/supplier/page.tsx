@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { GenerateMockDataButton } from "@/components/GenerateMockDataButton";
+import { GroupBuyCard } from "@/components/GroupBuyCard";
 import { useUserRole } from "@/hooks/useUserRole";
-import { User, Package, Eye, Lock, Plus, Edit2, Trash2 } from "lucide-react";
+import { User, Package, Eye, Lock, Plus, Edit2, Trash2, BrainCircuit, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { SupplierDemandCard, Demand } from "@/components/SupplierDemandCard";
@@ -22,6 +23,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { supplyTypes } from "@/data/supplyTypes";
+import { getDefaultSupplyImage } from "@/lib/supply-images";
+import Image from "next/image";
 
 interface SupplierSupply {
   id: string;
@@ -31,9 +34,27 @@ interface SupplierSupply {
   minimumOrder: number;
   description: string;
   location: string;
+  category?: string;
   imageUrl?: string;
   isActive: boolean;
   updatedAt: string;
+}
+
+interface GroupBuy {
+  id: string;
+  productName: string;
+  description?: string;
+  targetQuantity: number;
+  currentQuantity: number;
+  pricePerKg: number;
+  status: "open" | "closed" | "fulfilled";
+  endDate?: string;
+  expiryDate: string;
+  location?: string;
+  hubName: string;
+  imageUrl?: string;
+  aiScore?: number;
+  aiReasoning?: string;
 }
 
 export default function SupplierDashboardPage() {
@@ -53,6 +74,12 @@ export default function SupplierDashboardPage() {
     null
   );
 
+  // Deal-related state
+  const [deals, setDeals] = useState<GroupBuy[]>([]);
+  const [isLoadingDeals, setIsLoadingDeals] = useState(false);
+  const [isScoringDeals, setIsScoringDeals] = useState(false);
+  const [hasAIScores, setHasAIScores] = useState(false);
+
   // Form state for adding/editing supplies
   const [supplyForm, setSupplyForm] = useState({
     productName: "",
@@ -61,6 +88,7 @@ export default function SupplierDashboardPage() {
     minimumOrder: "",
     description: "",
     location: "",
+    category: "Other",
     imageUrl: "",
     useDefaultImage: true,
   });
@@ -94,8 +122,26 @@ export default function SupplierDashboardPage() {
       }
     };
 
+    const fetchDeals = async () => {
+      setIsLoadingDeals(true);
+      try {
+        const response = await fetch("/api/mock-data/deals");
+        if (response.ok) {
+          const data = await response.json();
+          const dealsWithScores = data.deals || [];
+          setDeals(dealsWithScores);
+          setHasAIScores(dealsWithScores.some((deal: GroupBuy) => deal.aiScore !== undefined));
+        }
+      } catch (error) {
+        console.error("Error fetching deals:", error);
+      } finally {
+        setIsLoadingDeals(false);
+      }
+    };
+
     fetchDemands();
     fetchSupplies();
+    fetchDeals();
   }, []);
 
   const resetForm = () => {
@@ -106,10 +152,46 @@ export default function SupplierDashboardPage() {
       minimumOrder: "",
       description: "",
       location: "",
+      category: "Other",
       imageUrl: "",
       useDefaultImage: true,
     });
     setEditingSupply(null);
+  };
+
+  const handleScoreDeals = async () => {
+    setIsScoringDeals(true);
+    try {
+      // Get user profile for scoring
+      const userProfileResponse = await fetch("/api/user/profile");
+      const userProfile = userProfileResponse.ok ? await userProfileResponse.json() : null;
+
+      const response = await fetch("/api/ai/score-deals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deals: deals,
+          userProfile,
+        }),
+      });
+
+      if (response.ok) {
+        const { scoredDeals } = await response.json();
+        setDeals(scoredDeals);
+        setHasAIScores(true);
+
+        // Store scores in database
+        await fetch("/api/ai/store-scores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ scoredDeals }),
+        });
+      }
+    } catch (error) {
+      console.error("Error scoring deals:", error);
+    } finally {
+      setIsScoringDeals(false);
+    }
   };
 
   const handleAddSupply = async () => {
@@ -192,6 +274,7 @@ export default function SupplierDashboardPage() {
       minimumOrder: supply.minimumOrder.toString(),
       description: supply.description,
       location: supply.location,
+      category: supply.category || "Other",
       imageUrl: supply.imageUrl || "",
       useDefaultImage: !supply.imageUrl,
     });
@@ -346,6 +429,71 @@ export default function SupplierDashboardPage() {
                       rows={3}
                     />
                   </div>
+                  
+                  {/* Image Selection */}
+                  <div className="space-y-3">
+                    <Label>Product Image</Label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="useDefaultImage"
+                        checked={supplyForm.useDefaultImage}
+                        onChange={(e) =>
+                          setSupplyForm({
+                            ...supplyForm,
+                            useDefaultImage: e.target.checked,
+                            imageUrl: e.target.checked ? "" : supplyForm.imageUrl,
+                          })
+                        }
+                        className="rounded"
+                      />
+                      <Label htmlFor="useDefaultImage" className="text-sm">
+                        Use default image for this product
+                      </Label>
+                    </div>
+                    
+                    {supplyForm.useDefaultImage && supplyForm.productName && (
+                      <div className="mt-2">
+                        <Image
+                          src={getDefaultSupplyImage(supplyForm.productName)}
+                          alt={supplyForm.productName}
+                          width={200}
+                          height={150}
+                          className="rounded border object-cover"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Default image for {supplyForm.productName}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {!supplyForm.useDefaultImage && (
+                      <div className="space-y-2">
+                        <Label htmlFor="imageUrl">Custom Image URL</Label>
+                        <Input
+                          id="imageUrl"
+                          placeholder="https://example.com/image.jpg"
+                          value={supplyForm.imageUrl}
+                          onChange={(e) =>
+                            setSupplyForm({
+                              ...supplyForm,
+                              imageUrl: e.target.value,
+                            })
+                          }
+                        />
+                        {supplyForm.imageUrl && (
+                          <Image
+                            src={supplyForm.imageUrl}
+                            alt="Custom product image"
+                            width={200}
+                            height={150}
+                            className="rounded border object-cover"
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
                   <Button
                     onClick={handleAddSupply}
                     className="w-full"
@@ -474,6 +622,80 @@ export default function SupplierDashboardPage() {
                     rows={3}
                   />
                 </div>
+                
+                {/* Image Selection for Edit */}
+                <div className="space-y-4">
+                  <Label>Supply Image</Label>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="editUseDefaultImage"
+                        checked={supplyForm.useDefaultImage}
+                        onChange={(e) =>
+                          setSupplyForm({
+                            ...supplyForm,
+                            useDefaultImage: e.target.checked,
+                            imageUrl: e.target.checked
+                              ? getDefaultSupplyImage(supplyForm.category || 'Other')
+                              : supplyForm.imageUrl,
+                          })
+                        }
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor="editUseDefaultImage" className="text-sm">
+                        Use default image for this category
+                      </Label>
+                    </div>
+
+                    {supplyForm.useDefaultImage ? (
+                      <div className="flex flex-col space-y-2">
+                        <span className="text-sm text-muted-foreground">
+                          Default image for {supplyForm.category}:
+                        </span>
+                        <Image
+                          src={getDefaultSupplyImage(supplyForm.category || 'Other')}
+                          alt={`Default ${supplyForm.category} image`}
+                          width={200}
+                          height={150}
+                          className="rounded-lg object-cover border"
+                        />
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <Label htmlFor="editImageUrl">Custom Image URL</Label>
+                        <Input
+                          id="editImageUrl"
+                          type="url"
+                          placeholder="Enter image URL"
+                          value={supplyForm.imageUrl}
+                          onChange={(e) =>
+                            setSupplyForm({
+                              ...supplyForm,
+                              imageUrl: e.target.value,
+                            })
+                          }
+                        />
+                        {supplyForm.imageUrl && (
+                          <div className="mt-2">
+                            <span className="text-sm text-muted-foreground">Preview:</span>
+                            <Image
+                              src={supplyForm.imageUrl}
+                              alt="Supply preview"
+                              width={200}
+                              height={150}
+                              className="rounded-lg object-cover border mt-1"
+                              onError={() => {
+                                console.log('Image failed to load');
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <Button
                   onClick={handleEditSupply}
                   className="w-full"
@@ -577,6 +799,74 @@ export default function SupplierDashboardPage() {
                 </Button>
               </CardContent>
             </Card>
+          )}
+        </section>
+
+        {/* Available Deals Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Available Deals</h2>
+            <Button
+              onClick={handleScoreDeals}
+              disabled={isScoringDeals}
+              variant={hasAIScores ? "secondary" : "default"}
+              size="sm"
+            >
+              {isScoringDeals ? (
+                <>
+                  <BrainCircuit className="h-4 w-4 mr-2 animate-spin" />
+                  AI Analyzing...
+                </>
+              ) : hasAIScores ? (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Re-score with AI
+                </>
+              ) : (
+                <>
+                  <BrainCircuit className="h-4 w-4 mr-2" />
+                  Score with AI
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {isLoadingDeals ? (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+            </div>
+          ) : deals.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {deals
+                .sort((a, b) => {
+                  // Sort by AI score if available (highest first)
+                  if (a.aiScore !== undefined && b.aiScore !== undefined) {
+                    return b.aiScore - a.aiScore;
+                  }
+                  if (a.aiScore !== undefined && b.aiScore === undefined) {
+                    return -1; // a comes first
+                  }
+                  if (a.aiScore === undefined && b.aiScore !== undefined) {
+                    return 1; // b comes first
+                  }
+                  return 0; // maintain original order
+                })
+                .map((deal) => (
+                  <GroupBuyCard key={deal.id} buy={deal} />
+                ))}
+            </div>
+          ) : (
+            <div className="text-center p-8 border-2 border-dashed rounded-lg">
+              <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No deals available</h3>
+              <p className="text-muted-foreground mb-6">
+                Generate some sample deals to get started
+              </p>
+              <GenerateMockDataButton
+                endpoint="/api/mock-data/deals"
+                label="Generate Sample Deals"
+              />
+            </div>
           )}
         </section>
 

@@ -67,7 +67,7 @@ Consider these factors:
 Return ONLY a JSON object with this exact format:
 {
   "score": 85,
-  "reasoning": "High relevance to chaat business, competitive price, suitable quantity for daily customers, good completion likelihood"
+  "reasoning": "High relevance to business, competitive price, suitable quantity (15-20 words max)"
 }
           `;
 
