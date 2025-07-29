@@ -95,7 +95,8 @@ Keep reasoning to 15-20 words maximum. Include all ${deals.length} deals in your
 
       // Try to extract JSON array from the response
       const jsonMatch = text.match(/\[[\s\S]*\]/);
-      let aiScores: Array<{id: string; score: number; reasoning: string}> = [];
+      let aiScores: Array<{ id: string; score: number; reasoning: string }> =
+        [];
 
       if (jsonMatch) {
         aiScores = JSON.parse(jsonMatch[0]);
@@ -157,14 +158,26 @@ Keep reasoning to 15-20 words maximum. Include all ${deals.length} deals in your
       const admin = getAdminApp();
       const db = admin.firestore();
 
-      const userScores = scoredDeals.reduce((acc: Record<string, {score: number; reasoning: string; scoredAt: string}>, deal: SerializableGroupBuy & {aiScore?: number; aiReasoning?: string}) => {
-        acc[deal.id] = {
-          score: deal.aiScore || 0,
-          reasoning: deal.aiReasoning || "No reasoning provided",
-          scoredAt: new Date().toISOString(),
-        };
-        return acc;
-      }, {});
+      const userScores = scoredDeals.reduce(
+        (
+          acc: Record<
+            string,
+            { score: number; reasoning: string; scoredAt: string }
+          >,
+          deal: SerializableGroupBuy & {
+            aiScore?: number;
+            aiReasoning?: string;
+          }
+        ) => {
+          acc[deal.id] = {
+            score: deal.aiScore || 0,
+            reasoning: deal.aiReasoning || "No reasoning provided",
+            scoredAt: new Date().toISOString(),
+          };
+          return acc;
+        },
+        {}
+      );
 
       await db.collection("users").doc(userId).update({
         "aiScores.deals": userScores,

@@ -356,45 +356,84 @@ export default function SupplierDashboardPage() {
                   {/* Image Selection */}
                   <div className="space-y-3">
                     <Label>Product Image</Label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="useDefaultImage"
-                        checked={supplyForm.useDefaultImage}
-                        onChange={(e) =>
-                          setSupplyForm({
-                            ...supplyForm,
-                            useDefaultImage: e.target.checked,
-                            imageUrl: e.target.checked
-                              ? ""
-                              : supplyForm.imageUrl,
-                          })
-                        }
-                        className="rounded"
-                      />
-                      <Label htmlFor="useDefaultImage" className="text-sm">
-                        Use default image for this product
-                      </Label>
+                    
+                    {/* Image selection cards */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Default Image Card */}
+                      <div
+                        onClick={() => setSupplyForm({
+                          ...supplyForm,
+                          useDefaultImage: true,
+                          imageUrl: ""
+                        })}
+                        className={`cursor-pointer border-2 rounded-lg p-3 transition-all ${
+                          supplyForm.useDefaultImage 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="text-center space-y-2">
+                          <div className="text-sm font-medium">Default Image</div>
+                          {supplyForm.productName ? (
+                            <Image
+                              src={getDefaultSupplyImage(supplyForm.productName)}
+                              alt={supplyForm.productName}
+                              width={120}
+                              height={90}
+                              className="rounded object-cover mx-auto"
+                            />
+                          ) : (
+                            <div className="w-[120px] h-[90px] bg-gray-100 rounded mx-auto flex items-center justify-center">
+                              <Package className="w-8 h-8 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="text-xs text-muted-foreground">
+                            Auto-selected based on product
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Custom Image Card */}
+                      <div
+                        onClick={() => setSupplyForm({
+                          ...supplyForm,
+                          useDefaultImage: false
+                        })}
+                        className={`cursor-pointer border-2 rounded-lg p-3 transition-all ${
+                          !supplyForm.useDefaultImage 
+                            ? 'border-blue-500 bg-blue-50' 
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="text-center space-y-2">
+                          <div className="text-sm font-medium">Custom Image</div>
+                          {!supplyForm.useDefaultImage && supplyForm.imageUrl ? (
+                            <Image
+                              src={supplyForm.imageUrl}
+                              alt="Custom product image"
+                              width={120}
+                              height={90}
+                              className="rounded object-cover mx-auto"
+                              onError={() => {
+                                console.log('Custom image failed to load');
+                              }}
+                            />
+                          ) : (
+                            <div className="w-[120px] h-[90px] bg-gray-100 rounded mx-auto flex items-center justify-center">
+                              <Plus className="w-8 h-8 text-gray-400" />
+                            </div>
+                          )}
+                          <div className="text-xs text-muted-foreground">
+                            Upload your own image
+                          </div>
+                        </div>
+                      </div>
                     </div>
 
-                    {supplyForm.useDefaultImage && supplyForm.productName && (
-                      <div className="mt-2">
-                        <Image
-                          src={getDefaultSupplyImage(supplyForm.productName)}
-                          alt={supplyForm.productName}
-                          width={200}
-                          height={150}
-                          className="rounded border object-cover"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Default image for {supplyForm.productName}
-                        </p>
-                      </div>
-                    )}
-
+                    {/* Custom image URL input */}
                     {!supplyForm.useDefaultImage && (
                       <div className="space-y-2">
-                        <Label htmlFor="imageUrl">Custom Image URL</Label>
+                        <Label htmlFor="imageUrl">Image URL</Label>
                         <Input
                           id="imageUrl"
                           placeholder="https://example.com/image.jpg"
@@ -551,80 +590,109 @@ export default function SupplierDashboardPage() {
                 {/* Image Selection for Edit */}
                 <div className="space-y-4">
                   <Label>Supply Image</Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="editUseDefaultImage"
-                        checked={supplyForm.useDefaultImage}
+                  
+                  {/* Image selection cards */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Default Image Card */}
+                    <div
+                      onClick={() => setSupplyForm({
+                        ...supplyForm,
+                        useDefaultImage: true,
+                        imageUrl: getDefaultSupplyImage(supplyForm.category || "Other")
+                      })}
+                      className={`cursor-pointer border-2 rounded-lg p-3 transition-all ${
+                        supplyForm.useDefaultImage 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-center space-y-2">
+                        <div className="text-sm font-medium">Default Image</div>
+                        <Image
+                          src={getDefaultSupplyImage(supplyForm.category || "Other")}
+                          alt={`Default ${supplyForm.category} image`}
+                          width={120}
+                          height={90}
+                          className="rounded object-cover mx-auto"
+                        />
+                        <div className="text-xs text-muted-foreground">
+                          Default for {supplyForm.category}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Custom Image Card */}
+                    <div
+                      onClick={() => setSupplyForm({
+                        ...supplyForm,
+                        useDefaultImage: false
+                      })}
+                      className={`cursor-pointer border-2 rounded-lg p-3 transition-all ${
+                        !supplyForm.useDefaultImage 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="text-center space-y-2">
+                        <div className="text-sm font-medium">Custom Image</div>
+                        {!supplyForm.useDefaultImage && supplyForm.imageUrl ? (
+                          <Image
+                            src={supplyForm.imageUrl}
+                            alt="Custom supply image"
+                            width={120}
+                            height={90}
+                            className="rounded object-cover mx-auto"
+                            onError={() => {
+                              console.log('Custom image failed to load');
+                            }}
+                          />
+                        ) : (
+                          <div className="w-[120px] h-[90px] bg-gray-100 rounded mx-auto flex items-center justify-center">
+                            <Plus className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                        <div className="text-xs text-muted-foreground">
+                          Upload your own image
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Custom image URL input */}
+                  {!supplyForm.useDefaultImage && (
+                    <div className="space-y-2">
+                      <Label htmlFor="editImageUrl">Image URL</Label>
+                      <Input
+                        id="editImageUrl"
+                        type="url"
+                        placeholder="Enter image URL"
+                        value={supplyForm.imageUrl}
                         onChange={(e) =>
                           setSupplyForm({
                             ...supplyForm,
-                            useDefaultImage: e.target.checked,
-                            imageUrl: e.target.checked
-                              ? getDefaultSupplyImage(
-                                  supplyForm.category || "Other"
-                                )
-                              : supplyForm.imageUrl,
+                            imageUrl: e.target.value,
                           })
                         }
-                        className="rounded border-gray-300"
                       />
-                      <Label htmlFor="editUseDefaultImage" className="text-sm">
-                        Use default image for this category
-                      </Label>
+                      {supplyForm.imageUrl && (
+                        <div className="mt-2">
+                          <span className="text-sm text-muted-foreground">
+                            Preview:
+                          </span>
+                          <Image
+                            src={supplyForm.imageUrl}
+                            alt="Supply preview"
+                            width={200}
+                            height={150}
+                            className="rounded-lg object-cover border mt-1"
+                            onError={() => {
+                              console.log("Image failed to load");
+                            }}
+                          />
+                        </div>
+                      )}
                     </div>
-
-                    {supplyForm.useDefaultImage ? (
-                      <div className="flex flex-col space-y-2">
-                        <span className="text-sm text-muted-foreground">
-                          Default image for {supplyForm.category}:
-                        </span>
-                        <Image
-                          src={getDefaultSupplyImage(
-                            supplyForm.category || "Other"
-                          )}
-                          alt={`Default ${supplyForm.category} image`}
-                          width={200}
-                          height={150}
-                          className="rounded-lg object-cover border"
-                        />
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <Label htmlFor="editImageUrl">Custom Image URL</Label>
-                        <Input
-                          id="editImageUrl"
-                          type="url"
-                          placeholder="Enter image URL"
-                          value={supplyForm.imageUrl}
-                          onChange={(e) =>
-                            setSupplyForm({
-                              ...supplyForm,
-                              imageUrl: e.target.value,
-                            })
-                          }
-                        />
-                        {supplyForm.imageUrl && (
-                          <div className="mt-2">
-                            <span className="text-sm text-muted-foreground">
-                              Preview:
-                            </span>
-                            <Image
-                              src={supplyForm.imageUrl}
-                              alt="Supply preview"
-                              width={200}
-                              height={150}
-                              className="rounded-lg object-cover border mt-1"
-                              onError={() => {
-                                console.log("Image failed to load");
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
 
                 <Button

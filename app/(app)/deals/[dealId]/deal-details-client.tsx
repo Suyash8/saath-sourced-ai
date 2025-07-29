@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -12,10 +12,12 @@ import {
   BrainCircuit,
   LineChart,
   ShoppingBasket,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { joinGroupBuyAction } from "@/app/actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getDefaultSupplyImage } from "@/lib/supply-images";
 
 type Deal = {
   id: string;
@@ -102,29 +104,26 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
-  const [analysisLoading, setAnalysisLoading] = useState(true);
+  const [analysisLoading, setAnalysisLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchAnalysis = async () => {
-      setAnalysisLoading(true);
-      try {
-        const response = await fetch("/api/ai/co-pilot", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ deal }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          setAnalysis(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch AI analysis", error);
-      } finally {
-        setAnalysisLoading(false);
+  const fetchAnalysis = async () => {
+    setAnalysisLoading(true);
+    try {
+      const response = await fetch("/api/ai/co-pilot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deal }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAnalysis(data);
       }
-    };
-    fetchAnalysis();
-  }, [deal]);
+    } catch (error) {
+      console.error("Failed to fetch AI analysis", error);
+    } finally {
+      setAnalysisLoading(false);
+    }
+  };
 
   const handleJoin = async () => {
     setLoading(true);
@@ -145,11 +144,15 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
       <main className="p-4 space-y-6">
         <div className="relative">
           <Image
-            src={deal.imageUrl || "/placeholder.jpg"}
+            src={deal.imageUrl || getDefaultSupplyImage(deal.productName)}
             alt={deal.productName}
             width={500}
             height={200}
             className="w-full h-48 object-cover rounded-lg bg-muted"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = getDefaultSupplyImage(deal.productName);
+            }}
           />
         </div>
 
@@ -161,6 +164,22 @@ export const DealDetailsClient = ({ deal }: { deal: Deal }) => {
             </p>
           </div>
 
+          {/* AI Analysis Section */}
+          {!analysis && !analysisLoading && (
+            <Card className="border-dashed">
+              <CardContent className="text-center py-6">
+                <BrainCircuit className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-medium mb-2">Get AI Analysis</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Let Saathi analyze this deal for profitability and market insights
+                </p>
+                <Button onClick={fetchAnalysis} disabled={analysisLoading}>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Analyze with AI
+                </Button>
+              </CardContent>
+            </Card>
+          )}
           {analysisLoading && <AILoadingState />}
           {analysis && <AIAnalysisCard analysis={analysis} />}
 

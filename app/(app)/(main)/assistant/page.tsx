@@ -112,7 +112,9 @@ export default function AssistantPage() {
               <BrainCircuit className="h-5 w-5" />
             </div>
             <div className="prose prose-sm dark:prose-invert max-w-lg rounded-lg px-4 py-2 bg-card border text-foreground">
-              <p>Hi! I&apos;m Saathi, your AI business assistant. I can help you:</p>
+              <p>
+                Hi! I&apos;m Saathi, your AI business assistant. I can help you:
+              </p>
               <ul>
                 <li>Analyze deals and compare prices</li>
                 <li>Provide business optimization tips</li>
