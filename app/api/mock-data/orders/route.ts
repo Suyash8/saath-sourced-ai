@@ -6,7 +6,10 @@ import { Timestamp } from "firebase-admin/firestore";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  request: NextRequest
+) {
   const userId = await getUserIdFromSession();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,12 +24,14 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .get();
 
-    let dealsData: unknown = null;
+    let dealsData: {
+      deals: Array<{ id?: string; [key: string]: unknown }>;
+    } | null = null;
 
     // If no deals exist, generate deals first
     if (dealsSnapshot.empty) {
       const dealsModel = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-2.5-flash",
         generationConfig: {
           responseMimeType: "application/json",
         },
@@ -59,26 +64,32 @@ export async function POST(request: NextRequest) {
       const dealsBatch = firestore.batch();
 
       // Add deals to Firestore
-      for (const deal of (dealsData as { deals: Deal[] }).deals) {
-        const dealRef = firestore.collection("groupBuys").doc();
-        const expiryDate = new Date();
-        expiryDate.setHours(expiryDate.getHours() + deal.expiryHours);
+      if (dealsData && Array.isArray(dealsData.deals)) {
+        for (const deal of dealsData.deals) {
+          const dealRef = firestore.collection("groupBuys").doc();
+          const expiryDate = new Date();
+          const expiryHours =
+            typeof deal.expiryHours === "number"
+              ? deal.expiryHours
+              : Number(deal.expiryHours) || 24; // fallback to 24 hours if invalid
+          expiryDate.setHours(expiryDate.getHours() + expiryHours);
 
-        dealsBatch.set(dealRef, {
-          productName: deal.productName,
-          pricePerKg: deal.pricePerKg,
-          targetQuantity: deal.targetQuantity,
-          currentQuantity: deal.currentQuantity,
-          status: deal.status,
-          hubName: deal.hubName,
-          hubId: deal.hubId,
-          supplierId: deal.supplierId,
-          supplierName: deal.supplierName,
-          description: deal.description,
-          expiryDate: Timestamp.fromDate(expiryDate),
-          createdAt: Timestamp.now(),
-          updatedAt: Timestamp.now(),
-        });
+          dealsBatch.set(dealRef, {
+            productName: deal.productName,
+            pricePerKg: deal.pricePerKg,
+            targetQuantity: deal.targetQuantity,
+            currentQuantity: deal.currentQuantity,
+            status: deal.status,
+            hubName: deal.hubName,
+            hubId: deal.hubId,
+            supplierId: deal.supplierId,
+            supplierName: deal.supplierName,
+            description: deal.description,
+            expiryDate: Timestamp.fromDate(expiryDate),
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          });
+        }
       }
 
       await dealsBatch.commit();
@@ -86,7 +97,7 @@ export async function POST(request: NextRequest) {
 
     // Now generate orders
     const ordersModel = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       generationConfig: {
         responseMimeType: "application/json",
       },
@@ -140,36 +151,38 @@ export async function POST(request: NextRequest) {
     await ordersBatch.commit();
 
     const message = dealsSnapshot.empty
-      ? `Generated ${(dealsData as { deals: Deal[] })?.deals?.length || 0} deals and ${
+      ? `Generated ${
+          (dealsData as { deals: Deal[] })?.deals?.length || 0
+        } deals and ${(ordersData.orders as Order[]).length} orders`
+      : `Successfully generated ${
           (ordersData.orders as Order[]).length
-        } orders`
-      : `Successfully generated ${(ordersData.orders as Order[]).length} mock orders`;
-// Add at the top after imports
-type Deal = {
-  productName: string;
-  pricePerKg: number;
-  targetQuantity: number;
-  currentQuantity: number;
-  status: string;
-  hubName: string;
-  hubId: string;
-  supplierId: string;
-  supplierName: string;
-  description: string;
-  expiryHours: number;
-};
+        } mock orders`;
+    // Add at the top after imports
+    type Deal = {
+      productName: string;
+      pricePerKg: number;
+      targetQuantity: number;
+      currentQuantity: number;
+      status: string;
+      hubName: string;
+      hubId: string;
+      supplierId: string;
+      supplierName: string;
+      description: string;
+      expiryHours: number;
+    };
 
-type Order = {
-  productName: string;
-  quantity: number;
-  pricePerKg: number;
-  total: number;
-  status: string;
-  groupBuyId: string;
-  hubName: string;
-  orderDate: string;
-  estimatedDelivery: string;
-};
+    type Order = {
+      productName: string;
+      quantity: number;
+      pricePerKg: number;
+      total: number;
+      status: string;
+      groupBuyId: string;
+      hubName: string;
+      orderDate: string;
+      estimatedDelivery: string;
+    };
 
     return NextResponse.json({
       message,
