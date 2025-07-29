@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { getUserIdFromSession } from "@/app/actions";
 import { Timestamp } from "firebase-admin/firestore";
-import { getDefaultSupplyImage } from "@/lib/supply-images";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { supplyId: string } }
+  { params }: { params: Promise<{ supplyId: string }> }
 ) {
   const userId = await getUserIdFromSession();
   if (!userId) {
@@ -14,7 +13,7 @@ export async function PUT(
   }
 
   try {
-    const { supplyId } = params;
+    const { supplyId } = await params;
     const {
       productName,
       pricePerKg,
@@ -44,9 +43,12 @@ export async function PUT(
     }
 
     // Determine the image URL to use
-    const finalImageUrl = useDefaultImage || !imageUrl 
-      ? getDefaultSupplyImage(productName)
-      : imageUrl;
+    const finalImageUrl =
+      useDefaultImage || !imageUrl
+        ? `https://images.unsplash.com/photo-${Math.random()
+            .toString()
+            .slice(2, 15)}/400x300?q=80&auto=format&fit=crop`
+        : imageUrl;
 
     const updateData = {
       productName,
@@ -83,7 +85,7 @@ export async function PUT(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { supplyId: string } }
+  { params }: { params: Promise<{ supplyId: string }> }
 ) {
   const userId = await getUserIdFromSession();
   if (!userId) {
@@ -91,7 +93,7 @@ export async function DELETE(
   }
 
   try {
-    const { supplyId } = params;
+    const { supplyId } = await params;
     const firestore = getAdminApp().firestore();
     const supplyRef = firestore.collection("supplierSupplies").doc(supplyId);
 

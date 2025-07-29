@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { getUserIdFromSession } from "@/app/actions";
 import { Timestamp } from "firebase-admin/firestore";
-import { getDefaultSupplyImage } from "@/lib/supply-images";
 
 export async function GET() {
   const userId = await getUserIdFromSession();
@@ -76,9 +75,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Determine the image URL to use
-    const finalImageUrl = useDefaultImage || !imageUrl 
-      ? getDefaultSupplyImage(productName)
-      : imageUrl;
+    const finalImageUrl =
+      useDefaultImage || !imageUrl
+        ? `https://images.unsplash.com/photo-${Math.random()
+            .toString()
+            .slice(2, 15)}/400x300?q=80&auto=format&fit=crop`
+        : imageUrl;
 
     const firestore = getAdminApp().firestore();
     const supplyRef = firestore.collection("supplierSupplies").doc();

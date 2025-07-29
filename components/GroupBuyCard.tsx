@@ -11,7 +11,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Clock, IndianRupee, MapPin, Minus, Plus, Sparkles } from "lucide-react";
+import {
+  Clock,
+  IndianRupee,
+  MapPin,
+  Minus,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import { SerializableGroupBuy } from "@/app/(app)/(main)/dashboard/page";
 import { joinGroupBuyAction } from "@/app/actions";
 import { useState } from "react";
@@ -36,9 +43,12 @@ export const GroupBuyCard = ({ buy }: GroupBuyCardProps) => {
   );
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800";
-    if (score >= 60) return "bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800";
-    if (score >= 40) return "bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800";
+    if (score >= 80)
+      return "bg-green-100 dark:bg-green-950/30 text-green-800 dark:text-green-300 border-green-200 dark:border-green-800";
+    if (score >= 60)
+      return "bg-blue-100 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800";
+    if (score >= 40)
+      return "bg-yellow-100 dark:bg-yellow-950/30 text-yellow-800 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800";
     return "bg-gray-100 dark:bg-gray-950/30 text-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-800";
   };
 

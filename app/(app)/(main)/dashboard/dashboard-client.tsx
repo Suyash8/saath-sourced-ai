@@ -17,7 +17,10 @@ interface ScoredDeal extends SerializableGroupBuy {
   aiReasoning?: string;
 }
 
-export function DashboardClient({ initialDeals, userId }: DashboardClientProps) {
+export function DashboardClient({
+  initialDeals,
+  userId,
+}: DashboardClientProps) {
   const [deals, setDeals] = useState<ScoredDeal[]>(initialDeals);
   const [isScoring, setIsScoring] = useState(false);
   const [hasAIScores, setHasAIScores] = useState(
@@ -61,7 +64,7 @@ export function DashboardClient({ initialDeals, userId }: DashboardClientProps) 
     return null;
   };
 
-  const storeAIScores = async (scoredDeals: any[]) => {
+  const storeAIScores = async (scoredDeals: ScoredDeal[]) => {
     try {
       await fetch("/api/ai/store-scores", {
         method: "POST",

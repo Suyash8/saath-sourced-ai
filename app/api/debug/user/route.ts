@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminApp } from "@/firebase/adminConfig";
 import { getUserIdFromSession } from "@/app/actions";
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  request: NextRequest
+) {
   try {
     const userId = await getUserIdFromSession();
 

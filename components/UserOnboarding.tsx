@@ -175,6 +175,7 @@ export function UserOnboarding() {
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const getProgressPercentage = (): number => {
     return (getStepNumber(currentStep) / getTotalSteps()) * 100;
   };

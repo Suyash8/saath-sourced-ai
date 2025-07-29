@@ -7,7 +7,10 @@ import { supplyTypes } from "@/data/supplyTypes";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  request: NextRequest
+) {
   const userId = await getUserIdFromSession();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

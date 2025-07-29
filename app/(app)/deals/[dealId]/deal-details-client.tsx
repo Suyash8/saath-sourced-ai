@@ -53,9 +53,11 @@ const AILoadingState = () => (
 
 const AIAnalysisCard = ({ analysis }: { analysis: Analysis }) => {
   const ratingColors = {
-    Excellent: "bg-green-50 dark:bg-green-950/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800",
+    Excellent:
+      "bg-green-50 dark:bg-green-950/20 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800",
     Good: "bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800",
-    Standard: "bg-slate-50 dark:bg-slate-950/20 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800",
+    Standard:
+      "bg-slate-50 dark:bg-slate-950/20 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800",
   };
 
   return (
@@ -66,7 +68,9 @@ const AIAnalysisCard = ({ analysis }: { analysis: Analysis }) => {
             <BrainCircuit className="h-5 w-5" />
             Saathi Co-pilot Analysis
           </div>
-          <Badge className="border-none bg-inherit">{analysis.dealRating} Deal</Badge>
+          <Badge className="border-none bg-inherit">
+            {analysis.dealRating} Deal
+          </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

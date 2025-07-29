@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+interface SerializableGroupBuy {
+  id: string;
+  productName: string;
+  pricePerKg: number;
+  targetQuantity: number;
+  currentQuantity: number;
+  status: "open" | "closed" | "fulfilled";
+  expiryDate: string;
+  hubName: string;
+}
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(req: NextRequest) {
@@ -32,7 +43,7 @@ User Profile:
 
     // Score each deal
     const scoredDeals = await Promise.all(
-      deals.map(async (deal: any) => {
+      deals.map(async (deal: SerializableGroupBuy) => {
         try {
           const prompt = `
 You are an AI business advisor for street food vendors. Score this deal from 0-100 based on how well it matches the user's business needs and potential profitability.

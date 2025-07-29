@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { role, businessType, location } = await request.json();
+    const {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      businessDescription,
+      businessType,
+      location,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      dailyCustomers,
+      role,
+    } = await request.json();
 
     // This would typically call an AI service like OpenAI
     // For now, I'll create intelligent suggestions based on business type and role
@@ -72,6 +80,7 @@ function generateVendorSuggestions(
 
 function generateSupplierSuggestions(
   businessType: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   location: string
 ): string[] {
   const suggestions: string[] = [];
